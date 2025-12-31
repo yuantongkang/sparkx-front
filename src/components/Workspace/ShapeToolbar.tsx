@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Pencil, Spline, ArrowDownToLine, X, Pipette, ChevronDown, AlignCenter, Scan } from 'lucide-react';
-import { BaseElement } from '../models/BaseElement';
+import { BaseElement } from '../../models/BaseElement';
 
 interface ShapeToolbarProps {
   element: BaseElement;

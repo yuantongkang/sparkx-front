@@ -19,7 +19,7 @@ import {
   ImageElement as ImageElementModel, 
   TextElement as TextElementModel, 
   TextShapeElement as TextShapeElementModel 
-} from '../models/BaseElement';
+} from '../../models/BaseElement';
 
 interface EditorStageProps {
   elements: BaseElementModel[];

@@ -1,4 +1,4 @@
-import AssetsEditor from "@/components/AssetsEditor";
+import AssetsEditor from "@/components/workspace/AssetsEditor";
 
 export default function Home() {
   return (

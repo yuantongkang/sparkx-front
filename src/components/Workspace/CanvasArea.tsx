@@ -6,7 +6,7 @@ import ToolsPanel, { ToolType } from './ToolsPanel';
 import ImageToolbar from './ImageToolbar';
 import ShapeToolbar from './ShapeToolbar';
 import { ZoomIn, ZoomOut } from 'lucide-react';
-import { BaseElement } from '../models/BaseElement';
+import { BaseElement } from '../../models/BaseElement';
 
 // Dynamically import EditorStage to avoid SSR issues with Konva
 const EditorStage = dynamic(() => import('./EditorStage'), { ssr: false });
