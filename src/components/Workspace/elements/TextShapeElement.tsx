@@ -1,21 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Text as KonvaText } from 'react-konva';
 import { Html } from 'react-konva-utils';
-import { BaseElement, BaseElementProps } from './BaseElement';
-import { ToolType } from '../ToolsPanel';
+import { BaseElement } from './BaseElement';
+import { BaseElementProps, TextShapeElementProps } from '../types/ElementProps';
+import { ToolType } from '../types/ToolType';
 
-export interface TextShapeElementProps extends BaseElementProps {
-  color?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  strokeStyle?: 'solid' | 'dashed' | 'dotted';
-  cornerRadius?: number;
-  text?: string;
-  fontSize?: number;
-  fontFamily?: string;
-  textColor?: string;
-  children?: React.ReactNode;
-}
+export { type TextShapeElementProps };
 
 export default function TextShapeElement(props: TextShapeElementProps) {
   const { 

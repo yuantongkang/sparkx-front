@@ -1,4 +1,4 @@
-import { ToolType } from '../components/workspace/ToolsPanel';
+import { ToolType } from './ToolType';
 
 export interface IElementState {
   id: string;

@@ -10,7 +10,7 @@ import TextCircleElement from './elements/TextCircleElement';
 import TextMessageSquareElement from './elements/TextMessageSquareElement';
 import TextArrowLeftElement from './elements/TextArrowLeftElement';
 import TextArrowRightElement from './elements/TextArrowRightElement';
-import { ToolType } from './ToolsPanel';
+import { ToolType } from './types/ToolType';
 import Konva from 'konva';
 import { 
   BaseElement as BaseElementModel, 
@@ -19,7 +19,7 @@ import {
   ImageElement as ImageElementModel, 
   TextElement as TextElementModel, 
   TextShapeElement as TextShapeElementModel 
-} from '../../models/BaseElement';
+} from './types/BaseElement';
 
 interface EditorStageProps {
   elements: BaseElementModel[];

@@ -1,23 +1,10 @@
 import React, { useRef, useEffect } from 'react';
 import { Group } from 'react-konva';
 import Konva from 'konva';
+import { BaseElementProps } from '../types/ElementProps';
 
-export interface BaseElementProps {
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  isSelected: boolean;
-  onSelect: () => void;
-  onChange: (newAttrs: any) => void;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
-  onDblClick?: () => void;
-  draggable?: boolean;
-  children?: React.ReactNode;
-}
+export { type BaseElementProps }; // Re-export for compatibility if needed, but better to fix consumers.
+
 
 /**
  * BaseElement handles common Konva element behaviors:

@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { BaseElement } from '../../../models/BaseElement';
+import { BaseElement } from '../types/BaseElement';
 import RectangleToolbar from './RectangleToolbar';
 import CircleToolbar from './CircleToolbar';
 import TriangleToolbar from './TriangleToolbar';

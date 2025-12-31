@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import { Pencil, ArrowDownToLine, Scan } from 'lucide-react';
-import { BaseElement } from '../../../models/BaseElement';
+import { BaseElement } from '../types/BaseElement';
 import { StrokePanel } from './StrokePanel';
 import { CornerPanel } from './CornerPanel';
 

@@ -1,21 +1,12 @@
 import React from 'react';
-import { BaseElementProps } from './BaseElement';
-import { ToolType } from '../ToolsPanel';
+import { BaseElementProps, ShapeElementProps } from '../types/ElementProps';
+import { ToolType } from '../types/ToolType';
 import RectangleElement from './RectangleElement';
 import CircleElement from './CircleElement';
 import TriangleElement from './TriangleElement';
 import StarElement from './StarElement';
 
-export interface ShapeElementProps extends BaseElementProps {
-  type: ToolType;
-  color?: string;
-  stroke?: string;
-  strokeWidth?: number;
-  strokeStyle?: 'solid' | 'dashed' | 'dotted';
-  cornerRadius?: number;
-  sides?: number;
-  starInnerRadius?: number;
-}
+export { type ShapeElementProps };
 
 export default function ShapeElement(props: ShapeElementProps) {
   const { type } = props;

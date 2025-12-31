@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Sidebar from './Sidebar';
 import CanvasArea from './CanvasArea';
 import RightPanel from './RightPanel';
-import { BaseElement, ElementFactory } from '../../models/BaseElement';
+import { BaseElement, ElementFactory } from './types/BaseElement';
 
 export default function AssetsEditor() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);

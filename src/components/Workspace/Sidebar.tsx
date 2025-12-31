@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { ChevronRight, Eye, Lock, ChevronUp, ChevronDown, Minimize2, Image as ImageIcon, Layers } from 'lucide-react';
-import { BaseElement } from '../../models/BaseElement';
+import { BaseElement } from './types/BaseElement';
 
 interface SidebarProps {
   isCollapsed: boolean;

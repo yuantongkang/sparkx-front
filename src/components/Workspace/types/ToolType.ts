@@ -1,0 +1,1 @@
+export type ToolType = 'select' | 'hand' | 'mark' | 'rectangle' | 'circle' | 'triangle' | 'star' | 'message-square' | 'arrow-left' | 'arrow-right' | 'text' | 'pencil' | 'pen' | 'image' | 'clipboard' | 'rectangle-text' | 'circle-text';

@@ -2,11 +2,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import ToolsPanel, { ToolType } from './ToolsPanel';
+import ToolsPanel from './ToolsPanel';
+import { ToolType } from './types/ToolType';
 import ImageToolbar from './toolbars/ImageToolbar';
 import ShapeToolbar from './toolbars/ShapeToolbar';
 import { ZoomIn, ZoomOut } from 'lucide-react';
-import { BaseElement } from '../../models/BaseElement';
+import { BaseElement } from './types/BaseElement';
 
 // Dynamically import EditorStage to avoid SSR issues with Konva
 const EditorStage = dynamic(() => import('./EditorStage'), { ssr: false });
