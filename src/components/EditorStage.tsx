@@ -1,34 +1,41 @@
 "use client";
 
 import React, { useRef, useEffect } from 'react';
-import { Stage, Layer, Rect, Circle, Ellipse, Transformer } from 'react-konva';
-import ImageItem from './elements/ImageItem';
+import { Stage, Layer, Transformer } from 'react-konva';
+import ImageElement from './elements/ImageElement';
+import ShapeElement from './elements/ShapeElement';
+import TextElement from './elements/TextElement';
+import RectangleTextElement from './elements/RectangleTextElement';
+import CircleTextElement from './elements/CircleTextElement';
+import MessageSquareTextElement from './elements/MessageSquareTextElement';
+import ArrowLeftTextElement from './elements/ArrowLeftTextElement';
+import ArrowRightTextElement from './elements/ArrowRightTextElement';
 import { ToolType } from './ToolsPanel';
 import Konva from 'konva';
-
-export interface CanvasItem {
-  id: string;
-  type: ToolType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  color?: string;
-}
+import { 
+  BaseElement as BaseElementModel, 
+  ElementFactory, 
+  ShapeElement as ShapeElementModel, 
+  ImageElement as ImageElementModel, 
+  TextElement as TextElementModel, 
+  ShapeTextElement as ShapeTextElementModel 
+} from '../models/BaseElement';
 
 interface EditorStageProps {
-  elements: CanvasItem[];
-  onElementsChange: (elements: CanvasItem[]) => void;
+  elements: BaseElementModel[];
+  onElementsChange: (elements: BaseElementModel[]) => void;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   activeTool: ToolType;
   onToolUsed: () => void;
   zoom: number;
+  stagePos?: { x: number, y: number };
+  onStagePosChange?: (pos: { x: number, y: number }) => void;
   width: number;
   height: number;
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  onToolChange?: (tool: ToolType) => void;
 }
 
 export default function EditorStage({
@@ -39,17 +46,43 @@ export default function EditorStage({
   activeTool,
   onToolUsed,
   zoom,
+  stagePos = { x: 0, y: 0 },
+  onStagePosChange,
   width,
   height,
   onDragStart,
   onDragEnd,
+  onToolChange,
 }: EditorStageProps) {
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
 
+  const [isDrawing, setIsDrawing] = React.useState(false);
+  const [drawStartPos, setDrawStartPos] = React.useState({ x: 0, y: 0 });
+  const [previewElement, setPreviewElement] = React.useState<BaseElementModel | null>(null);
+
+  // Handle stage position updates (centering)
+  useEffect(() => {
+    if (stageRef.current) {
+      stageRef.current.position(stagePos);
+      stageRef.current.batchDraw();
+    }
+  }, [stagePos]);
+
+  // Update cursor based on tool
+  useEffect(() => {
+    if (stageRef.current) {
+      if (activeTool === 'hand') {
+        stageRef.current.container().style.cursor = 'grab';
+      } else {
+        stageRef.current.container().style.cursor = 'default';
+      }
+    }
+  }, [activeTool]);
+
   // Handle selection transformer
   useEffect(() => {
-    if (selectedId && transformerRef.current && stageRef.current) {
+    if (selectedId && transformerRef.current && stageRef.current && !isDrawing) {
       const selectedNode = stageRef.current.findOne('#' + selectedId);
       if (selectedNode) {
         transformerRef.current.nodes([selectedNode]);
@@ -60,9 +93,16 @@ export default function EditorStage({
     } else if (transformerRef.current) {
       transformerRef.current.nodes([]);
     }
-  }, [selectedId, elements]);
+  }, [selectedId, elements, isDrawing]);
 
-  const handleStageClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
+  const getStagePos = (stage: Konva.Stage, pointerPosition: { x: number, y: number }) => {
+    return {
+      x: (pointerPosition.x - stage.x()) / stage.scaleX(),
+      y: (pointerPosition.y - stage.y()) / stage.scaleY(),
+    };
+  };
+
+  const handleStageMouseDown = (e: Konva.KonvaEventObject<MouseEvent>) => {
     // If clicked on empty area - remove all selections
     if (e.target === e.target.getStage()) {
       if (activeTool === 'select') {
@@ -70,85 +110,32 @@ export default function EditorStage({
         return;
       }
 
-      // Add new element logic
+      // Start drawing new element
       const stage = e.target.getStage();
       if (!stage) return;
       
       const pointerPosition = stage.getPointerPosition();
       if (!pointerPosition) return;
 
-      // Adjust for zoom if needed (stage scale)
-      // Since we apply scale to stage, we need to divide pointer position by scale
-      // But here we might just rely on raw coordinates if stage isn't scaled yet
-      const x = (pointerPosition.x - stage.x()) / stage.scaleX();
-      const y = (pointerPosition.y - stage.y()) / stage.scaleY();
+      const { x, y } = getStagePos(stage, pointerPosition);
 
-      const newId = Date.now().toString();
-      let newElement: CanvasItem | null = null;
-
-      if (activeTool === 'rectangle') {
-        newElement = { 
-          id: newId, 
-          type: 'rectangle', 
-          x: x - 50, 
-          y: y - 50, 
-          width: 100, 
-          height: 100, 
-          rotation: 0, 
-          color: '#3b82f6' 
-        };
-      } else if (activeTool === 'circle') {
-        newElement = { 
-          id: newId, 
-          type: 'circle', 
-          x: x - 50, 
-          y: y - 50, 
-          width: 100, 
-          height: 100, 
-          rotation: 0, 
-          color: '#ef4444' 
-        };
-      } else if (activeTool === 'triangle') {
-        // Simple implementation for triangle (using existing rectangle logic or we can add specific later)
-        // For now, let's treat it as a rectangle internally or just use rectangle type to avoid crashes if we don't have a renderer
-        // Ideally we should add a renderer for 'triangle'
-        newElement = { 
-          id: newId, 
-          type: 'rectangle', // Fallback to rectangle for now to avoid rendering issues
-          x: x - 50, 
-          y: y - 50, 
-          width: 100, 
-          height: 100, 
-          rotation: 0, 
-          color: '#10b981' 
-        };
-      } else if (['star', 'message-square', 'arrow-left', 'arrow-right'].includes(activeTool)) {
-         // Fallback for other new shapes
-         newElement = { 
-          id: newId, 
-          type: 'rectangle', 
-          x: x - 50, 
-          y: y - 50, 
-          width: 100, 
-          height: 100, 
-          rotation: 0, 
-          color: '#8b5cf6' 
-        };
-      }
-
-      if (newElement) {
-        onElementsChange([...elements, newElement]);
-        onSelect(newId);
-        onToolUsed();
+      if (['rectangle', 'circle', 'triangle', 'star', 'message-square', 'arrow-left', 'arrow-right', 'rectangle-text', 'circle-text', 'text', 'image'].includes(activeTool)) {
+         setIsDrawing(true);
+         setDrawStartPos({ x, y });
+         // Create a temporary element with 0 size
+         const newEl = ElementFactory.createDefault(activeTool, x, y);
+         newEl.width = 0;
+         newEl.height = 0;
+         setPreviewElement(newEl);
+         
+         // Deselect current
+         onSelect(null);
       }
       return;
     }
 
     // If clicked on an element
     if (activeTool === 'select') {
-      // Find the parent group or shape that has an ID
-      // For simple shapes, e.target.id() might work if we set it
-      // For groups (like character), we might hit a child, so we look up
       const clickedId = e.target.id() || e.target.getParent()?.id();
       if (clickedId) {
         onSelect(clickedId);
@@ -156,11 +143,98 @@ export default function EditorStage({
     }
   };
 
-  const handleElementChange = (id: string, newAttrs: Partial<CanvasItem>) => {
-    const newElements = elements.map(el => 
-      el.id === id ? { ...el, ...newAttrs } : el
-    );
-    onElementsChange(newElements);
+  const handleStageMouseMove = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (!isDrawing || !previewElement) return;
+
+    const stage = e.target.getStage();
+    if (!stage) return;
+
+    const pointerPosition = stage.getPointerPosition();
+    if (!pointerPosition) return;
+
+    const { x, y } = getStagePos(stage, pointerPosition);
+
+    const width = Math.abs(x - drawStartPos.x);
+    const height = Math.abs(y - drawStartPos.y);
+    const newX = Math.min(x, drawStartPos.x);
+    const newY = Math.min(y, drawStartPos.y);
+
+    const updatedPreview = previewElement.update({
+      x: newX,
+      y: newY,
+      width: width,
+      height: height
+    });
+
+    setPreviewElement(updatedPreview);
+  };
+
+  const handleStageMouseUp = (e: Konva.KonvaEventObject<MouseEvent>) => {
+    if (!isDrawing || !previewElement) return;
+
+    const stage = e.target.getStage();
+    if (!stage) {
+       setIsDrawing(false);
+       setPreviewElement(null);
+       return;
+    }
+
+    const pointerPosition = stage.getPointerPosition();
+    if (!pointerPosition) {
+       setIsDrawing(false);
+       setPreviewElement(null);
+       return;
+    }
+
+    const { x, y } = getStagePos(stage, pointerPosition);
+    
+    // Calculate diagonal distance
+    const dx = x - drawStartPos.x;
+    const dy = y - drawStartPos.y;
+    const diagonal = Math.sqrt(dx * dx + dy * dy);
+
+    let finalElement = previewElement;
+
+    // Threshold for click vs drag (e.g. 10 pixels)
+    if (diagonal < 10) {
+       // If it's a click on empty area and we are in a drawing mode, 
+       // reset to select tool instead of creating a default element.
+       if (activeTool !== 'select') {
+          setIsDrawing(false);
+          setPreviewElement(null);
+          onToolChange?.('select');
+          return;
+       }
+
+       // The following code is unreachable because of the check above.
+       // It seems like click-to-create was intended but disabled.
+       // Commenting out to satisfy TypeScript.
+       
+       /*
+       // Create default size element centered at click or top-left at click
+       const defaultX = activeTool === 'image' ? drawStartPos.x - 100 : drawStartPos.x - 50;
+       const defaultY = activeTool === 'image' ? drawStartPos.y - 100 : drawStartPos.y - 50;
+       
+       finalElement = ElementFactory.createDefault(activeTool, defaultX, defaultY);
+       */
+    }
+
+    onElementsChange([...elements, finalElement]);
+    onSelect(finalElement.id);
+    onToolUsed();
+    
+    setIsDrawing(false);
+    setPreviewElement(null);
+  };
+
+  const handleElementChange = (id: string, newAttrs: any) => {
+    const updatedElements = elements.map((el) => {
+      if (el.id === id) {
+        return el.update(newAttrs);
+      }
+      return el;
+    });
+    onElementsChange(updatedElements);
   };
 
   return (
@@ -170,122 +244,122 @@ export default function EditorStage({
       height={height}
       scaleX={zoom}
       scaleY={zoom}
-      onMouseDown={handleStageClick}
-      onTouchStart={handleStageClick}
+      x={stagePos.x}
+      y={stagePos.y}
+      draggable={activeTool === 'hand'}
+      onDragStart={() => {
+        if (activeTool === 'hand') {
+          if (stageRef.current) stageRef.current.container().style.cursor = 'grabbing';
+          onDragStart?.();
+        }
+      }}
+      onDragEnd={(e) => {
+        if (activeTool === 'hand') {
+          if (stageRef.current) stageRef.current.container().style.cursor = 'grab';
+          onStagePosChange?.({ x: e.target.x(), y: e.target.y() });
+          onDragEnd?.();
+        }
+      }}
+      onMouseDown={handleStageMouseDown}
+      onTouchStart={handleStageMouseDown as any}
+      onMouseMove={handleStageMouseMove}
+      onTouchMove={handleStageMouseMove as any}
+      onMouseUp={handleStageMouseUp}
+      onTouchEnd={handleStageMouseUp as any}
       className="bg-[#fafafa]"
     >
       <Layer>
-        {elements.map((el) => {
+        {[...elements, ...(previewElement ? [previewElement] : [])].map((el) => {
+          if (!el.visible) return null;
+          
+          const commonProps = {
+            key: el.id,
+            id: el.id,
+            x: el.x,
+            y: el.y,
+            width: el.width,
+            height: el.height,
+            rotation: el.rotation,
+            isSelected: selectedId === el.id,
+            onSelect: () => activeTool === 'select' && onSelect(el.id),
+            onChange: (attrs: any) => handleElementChange(el.id, attrs),
+            onDragStart: onDragStart,
+            onDragEnd: onDragEnd,
+            draggable: activeTool === 'select',
+          };
+
           if (el.type === 'image') {
             return (
-              <ImageItem
-                key={el.id}
-                id={el.id}
-                x={el.x}
-                y={el.y}
-                width={el.width}
-                height={el.height}
-                rotation={el.rotation}
-                isSelected={selectedId === el.id}
-                onSelect={() => activeTool === 'select' && onSelect(el.id)}
-                onChange={(attrs) => handleElementChange(el.id, attrs)}
-                onDragStart={onDragStart}
-                onDragEnd={onDragEnd}
+              <ImageElement
+                {...commonProps}
+                src={(el as ImageElementModel).src}
               />
             );
-          } else if (el.type === 'rectangle') {
+          } else if (el.type === 'text') {
+             return (
+               <TextElement
+                  {...commonProps}
+                  text={(el as TextElementModel).text}
+                  fontSize={(el as TextElementModel).fontSize}
+                  fontFamily={(el as TextElementModel).fontFamily}
+                  fill={(el as TextElementModel).textColor}
+               />
+             );
+          } else if (['message-square', 'arrow-left', 'arrow-right', 'rectangle-text', 'circle-text'].includes(el.type)) {
+             // Shape Text Elements
+             const shapeTextProps = {
+                ...commonProps,
+                color: (el as ShapeTextElementModel).color,
+                stroke: (el as ShapeTextElementModel).stroke,
+                strokeWidth: (el as ShapeTextElementModel).strokeWidth,
+                strokeStyle: (el as ShapeTextElementModel).strokeStyle,
+                cornerRadius: (el as ShapeTextElementModel).cornerRadius,
+                text: (el as ShapeTextElementModel).text,
+                fontSize: (el as ShapeTextElementModel).fontSize,
+                fontFamily: (el as ShapeTextElementModel).fontFamily,
+                textColor: (el as ShapeTextElementModel).textColor,
+             };
+
+             switch (el.type) {
+               case 'rectangle-text':
+                 return <RectangleTextElement {...shapeTextProps} />;
+               case 'circle-text':
+                 return <CircleTextElement {...shapeTextProps} />;
+               case 'message-square':
+                 return <MessageSquareTextElement {...shapeTextProps} />;
+               case 'arrow-left':
+                 return <ArrowLeftTextElement {...shapeTextProps} />;
+               case 'arrow-right':
+                 return <ArrowRightTextElement {...shapeTextProps} />;
+               default:
+                 return null;
+             }
+          } else if (['rectangle', 'circle', 'triangle', 'star'].includes(el.type)) {
             return (
-              <Rect
-                key={el.id}
-                id={el.id}
-                x={el.x}
-                y={el.y}
-                width={el.width}
-                height={el.height}
-                rotation={el.rotation}
-                fill={el.color}
-                draggable={activeTool === 'select'}
-                onClick={() => activeTool === 'select' && onSelect(el.id)}
-                onTap={() => activeTool === 'select' && onSelect(el.id)}
-                onDragStart={onDragStart}
-                onDragEnd={(e) => {
-                  handleElementChange(el.id, {
-                    x: e.target.x(),
-                    y: e.target.y(),
-                    rotation: e.target.rotation(),
-                  });
-                  onDragEnd?.();
-                }}
-                onTransformStart={onDragStart}
-                onTransformEnd={(e) => {
-                  const node = e.target;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  node.scaleX(1);
-                  node.scaleY(1);
-                  handleElementChange(el.id, {
-                    x: node.x(),
-                    y: node.y(),
-                    width: Math.max(5, node.width() * scaleX),
-                    height: Math.max(5, node.height() * scaleY),
-                    rotation: node.rotation(),
-                  });
-                  onDragEnd?.();
-                }}
-              />
-            );
-          } else if (el.type === 'circle') {
-            return (
-              <Ellipse
-                key={el.id}
-                id={el.id}
-                x={el.x + el.width / 2} // Konva circle x,y is center, but our model might assume top-left
-                y={el.y + el.height / 2} // We need to be careful with this conversion
-                // Actually, let's stick to our model. 
-                // If our model says x,y is top-left, for circle we should adjust or use Ellipse with offset.
-                // But standard Circle in Konva uses radius.
-                // Let's use Ellipse to support width/height resizing properly
-                radiusX={el.width / 2}
-                radiusY={el.height / 2}
-                rotation={el.rotation}
-                fill={el.color}
-                draggable={activeTool === 'select'}
-                onClick={() => activeTool === 'select' && onSelect(el.id)}
-                onTap={() => activeTool === 'select' && onSelect(el.id)}
-                onDragStart={onDragStart}
-                onDragEnd={(e) => {
-                   handleElementChange(el.id, {
-                     x: e.target.x() - (e.target.width() * e.target.scaleX()) / 2,
-                     y: e.target.y() - (e.target.height() * e.target.scaleY()) / 2,
-                     rotation: e.target.rotation(),
-                   });
-                   onDragEnd?.();
-                }}
-                onTransformStart={onDragStart}
-                onTransformEnd={(e) => {
-                  const node = e.target;
-                  const scaleX = node.scaleX();
-                  const scaleY = node.scaleY();
-                  node.scaleX(1);
-                  node.scaleY(1);
-                  const newWidth = Math.max(5, node.width() * scaleX);
-                  const newHeight = Math.max(5, node.height() * scaleY);
-                  
-                  handleElementChange(el.id, {
-                    x: node.x() - newWidth / 2,
-                    y: node.y() - newHeight / 2,
-                    width: newWidth,
-                    height: newHeight,
-                    rotation: node.rotation(),
-                  });
-                  onDragEnd?.();
-                }}
+              <ShapeElement
+                {...commonProps}
+                type={el.type}
+                color={(el as ShapeElementModel).color}
+                stroke={(el as ShapeElementModel).stroke}
+                strokeWidth={(el as ShapeElementModel).strokeWidth}
+                strokeStyle={(el as ShapeElementModel).strokeStyle}
+                cornerRadius={(el as ShapeElementModel).cornerRadius}
+                sides={(el as ShapeElementModel).sides}
               />
             );
           }
           return null;
         })}
-        <Transformer ref={transformerRef} />
+        <Transformer
+          ref={transformerRef}
+          boundBoxFunc={(oldBox, newBox) => {
+            // limit resize
+            if (newBox.width < 5 || newBox.height < 5) {
+              return oldBox;
+            }
+            return newBox;
+          }}
+        />
       </Layer>
     </Stage>
   );

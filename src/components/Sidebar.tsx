@@ -2,13 +2,17 @@
 
 import React, { useState } from 'react';
 import { ChevronRight, Eye, Lock, ChevronUp, ChevronDown, Minimize2, Image as ImageIcon, Layers } from 'lucide-react';
+import { BaseElement } from '../models/BaseElement';
 
 interface SidebarProps {
   isCollapsed: boolean;
   toggleSidebar: () => void;
+  elements: BaseElement[];
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
 }
 
-export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
+export default function Sidebar({ isCollapsed, toggleSidebar, elements, selectedId, onSelect }: SidebarProps) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
 
   if (isCollapsed) {
@@ -45,33 +49,22 @@ export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
 
       {/* Layers Header */}
       <div className="p-4 pb-2">
-        <span className="font-bold text-gray-800">图层</span>
+        <span className="font-bold text-gray-800">图层 ({elements.length})</span>
       </div>
       
       {/* Layers List */}
       <div className="flex-1 overflow-y-auto px-3 pb-3 space-y-2">
-        <LayerItem 
-          name="端正战力姿势三视图" 
-          image="/role.png" 
-          active={false} 
-        />
-        <LayerItem 
-          name="角色端正战力姿势" 
-          image="/role.png" 
-          active={false} 
-        />
-        <LayerItem 
-          name="角色三视图" 
-          image="/role.png" 
-          active={true} 
-          locked 
-          visible 
-        />
-        <LayerItem 
-          name="image" 
-          image="/role.png" 
-          active={false} 
-        />
+        {elements.slice().reverse().map((el) => (
+          <LayerItem 
+            key={el.id}
+            element={el}
+            active={selectedId === el.id} 
+            onClick={() => onSelect(el.id)}
+          />
+        ))}
+        {elements.length === 0 && (
+           <div className="text-center text-gray-400 text-sm py-4">暂无图层</div>
+        )}
       </div>
 
       {/* Collapse Button */}
@@ -87,32 +80,41 @@ export default function Sidebar({ isCollapsed, toggleSidebar }: SidebarProps) {
   );
 }
 
-function LayerItem({ name, image, active, locked, visible }: { name: string, image: string, active: boolean, locked?: boolean, visible?: boolean }) {
+function LayerItem({ element, active, onClick }: { element: BaseElement, active: boolean, onClick: () => void }) {
+  // Determine icon/image based on type
+  const isImage = element.type === 'image';
+  const imageUrl = isImage ? (element as any).src : null;
+
   return (
-    <div className={`
+    <div 
+      onClick={onClick}
+      className={`
       flex items-center gap-3 p-2 rounded-xl border transition-all cursor-pointer group
       ${active 
         ? 'bg-gray-100 border-gray-100 shadow-sm' 
         : 'bg-white border-transparent hover:bg-gray-50 hover:border-gray-100'
       }
     `}>
-      <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 overflow-hidden flex-shrink-0 relative">
-        {/* We use a colored div or img */}
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${image})` }} />
-        {!image && <div className="absolute inset-0 bg-gray-100 flex items-center justify-center text-xs">IMG</div>}
+      <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 overflow-hidden flex-shrink-0 relative flex items-center justify-center">
+        {imageUrl ? (
+           <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${imageUrl})` }} />
+        ) : (
+           <div className="w-4 h-4 rounded-sm" style={{ backgroundColor: (element as any).color || '#ccc' }}></div>
+        )}
       </div>
       
       <div className="flex-1 min-w-0">
         <div className={`text-sm font-medium truncate ${active ? 'text-gray-900' : 'text-gray-600'}`}>
-          {name}
+          {element.name}
         </div>
+        <div className="text-xs text-gray-400">{element.type}</div>
       </div>
 
       <div className="flex items-center gap-1.5">
-        <div className={`text-gray-400 ${(!locked && !active) && 'opacity-0 group-hover:opacity-100'} hover:text-gray-600`}>
+        <div className={`text-gray-400 ${(!element.locked && !active) && 'opacity-0 group-hover:opacity-100'} hover:text-gray-600`}>
           <Lock size={14} />
         </div>
-        <div className={`text-gray-400 ${(!visible && !active) && 'opacity-0 group-hover:opacity-100'} hover:text-gray-600`}>
+        <div className={`text-gray-400 ${(!element.visible && !active) && 'opacity-0 group-hover:opacity-100'} hover:text-gray-600`}>
           <Eye size={14} />
         </div>
       </div>

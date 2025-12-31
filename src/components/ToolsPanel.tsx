@@ -3,7 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { MousePointer2, Square, Circle, Type, Pencil, Image as ImageIcon, Clipboard, Triangle, Star, MessageSquare, ArrowLeft, ArrowRight, PenTool, Hand, MapPin } from 'lucide-react';
 
-export type ToolType = 'select' | 'hand' | 'mark' | 'rectangle' | 'circle' | 'triangle' | 'star' | 'message-square' | 'arrow-left' | 'arrow-right' | 'text' | 'pencil' | 'pen' | 'image' | 'clipboard';
+export type ToolType = 'select' | 'hand' | 'mark' | 'rectangle' | 'circle' | 'triangle' | 'star' | 'message-square' | 'arrow-left' | 'arrow-right' | 'text' | 'pencil' | 'pen' | 'image' | 'clipboard' | 'rectangle-text' | 'circle-text';
 
 interface ToolsPanelProps {
   isSidebarCollapsed: boolean;
@@ -33,10 +33,22 @@ export default function ToolsPanel({ isSidebarCollapsed, activeTool, onToolChang
     { id: 'star', icon: <Star size={20} /> },
   ];
 
+  const BlockArrowLeftIcon = ({ size = 20 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20 10H10L10 6L4 12L10 18L10 14H20V10Z" />
+    </svg>
+  );
+
+  const BlockArrowRightIcon = ({ size = 20 }: { size?: number }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 10H14L14 6L20 12L14 18L14 14H4V10Z" />
+    </svg>
+  );
+
   const shapeTexts = [
     { id: 'message-square', icon: <MessageSquare size={20} /> },
-    { id: 'arrow-left', icon: <ArrowLeft size={20} /> },
-    { id: 'arrow-right', icon: <ArrowRight size={20} /> },
+    { id: 'arrow-left', icon: <BlockArrowLeftIcon size={20} /> },
+    { id: 'arrow-right', icon: <BlockArrowRightIcon size={20} /> },
   ];
   
   const pens = [
@@ -223,7 +235,7 @@ export default function ToolsPanel({ isSidebarCollapsed, activeTool, onToolChang
             <div className="text-xs text-gray-500 mb-2">形状文本</div>
             <div className="flex flex-wrap gap-2">
               <button
-                 onClick={() => handleShapeSelect('rectangle')}
+                 onClick={() => handleShapeSelect('rectangle-text')}
                  className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors
                     ${activeTool === 'rectangle-text' 
                       ? 'bg-gray-100 text-gray-900' 
@@ -234,7 +246,7 @@ export default function ToolsPanel({ isSidebarCollapsed, activeTool, onToolChang
                 <Square size={20} />
               </button>
                <button
-                 onClick={() => handleShapeSelect('circle')}
+                 onClick={() => handleShapeSelect('circle-text')}
                  className={`w-10 h-10 flex items-center justify-center rounded-lg transition-colors
                     ${activeTool === 'circle-text' 
                       ? 'bg-gray-100 text-gray-900' 

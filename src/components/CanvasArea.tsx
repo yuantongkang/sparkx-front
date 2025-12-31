@@ -4,36 +4,39 @@ import React, { useState, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import ToolsPanel, { ToolType } from './ToolsPanel';
 import ImageToolbar from './ImageToolbar';
+import ShapeToolbar from './ShapeToolbar';
 import { ZoomIn, ZoomOut } from 'lucide-react';
+import { BaseElement } from '../models/BaseElement';
 
 // Dynamically import EditorStage to avoid SSR issues with Konva
 const EditorStage = dynamic(() => import('./EditorStage'), { ssr: false });
 
 interface CanvasAreaProps {
   isSidebarCollapsed: boolean;
+  elements: BaseElement[];
+  onElementsChange: (elements: BaseElement[]) => void;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
 }
 
-interface CanvasItem {
-  id: string;
-  type: ToolType;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  color?: string;
-}
-
-export default function CanvasArea({ isSidebarCollapsed }: CanvasAreaProps) {
+export default function CanvasArea({ 
+  isSidebarCollapsed, 
+  elements, 
+  onElementsChange, 
+  selectedId, 
+  onSelect 
+}: CanvasAreaProps) {
   const [activeTool, setActiveTool] = useState<ToolType>('select');
-  const [elements, setElements] = useState<CanvasItem[]>([
-    { id: '1', type: 'image', x: 100, y: 100, width: 400, height: 600, rotation: 0 }
-  ]);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Local state for zoom and dragging, but elements are now props
   const [isDragging, setIsDragging] = useState(false);
   const [zoom, setZoom] = useState(1);
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    // Center view on selection logic removed as requested
+  }, []); // Run when selectedId changes
 
   useEffect(() => {
     const updateDimensions = () => {
@@ -48,6 +51,46 @@ export default function CanvasArea({ isSidebarCollapsed }: CanvasAreaProps) {
     updateDimensions();
     window.addEventListener('resize', updateDimensions);
     return () => window.removeEventListener('resize', updateDimensions);
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input or textarea
+      if ((e.target as HTMLElement).tagName === 'INPUT' || (e.target as HTMLElement).tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch (e.key.toLowerCase()) {
+        case 'v':
+          setActiveTool('select');
+          break;
+        case 'h':
+          setActiveTool('hand');
+          break;
+        case 'm':
+          setActiveTool('mark');
+          break;
+        case 'p':
+          if (e.shiftKey) {
+            setActiveTool('pencil');
+          } else {
+            setActiveTool('pen');
+          }
+          break;
+        case 'r':
+          setActiveTool('rectangle');
+          break;
+        case 'o':
+          setActiveTool('circle');
+          break;
+        case 't':
+          setActiveTool('text');
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleZoomIn = () => setZoom(z => Math.min(z * 1.1, 3));
@@ -68,12 +111,15 @@ export default function CanvasArea({ isSidebarCollapsed }: CanvasAreaProps) {
       {dimensions.width > 0 && dimensions.height > 0 && (
         <EditorStage 
           elements={elements}
-          onElementsChange={setElements}
+          onElementsChange={onElementsChange}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={onSelect}
           activeTool={activeTool}
-          onToolUsed={() => setActiveTool('select')}
+          onToolUsed={() => {}}
+          onToolChange={setActiveTool}
           zoom={zoom}
+          stagePos={stagePos}
+          onStagePosChange={setStagePos}
           width={dimensions.width}
           height={dimensions.height}
           onDragStart={() => setIsDragging(true)}
@@ -85,15 +131,14 @@ export default function CanvasArea({ isSidebarCollapsed }: CanvasAreaProps) {
         const selectedElement = elements.find(el => el.id === selectedId);
         if (!selectedElement) return null;
 
-        // Use stage-relative coordinates, taking zoom and pan into account (if pan is added later)
-        // Currently we only have zoom.
-        // Konva element x/y are relative to the stage top-left (0,0).
-        // The stage itself might be transformed, but here we apply zoom to stage scale.
-        // So screen coordinate = element coordinate * zoom
-        
-        // Ensure we're using the latest element position
-        const left = (selectedElement.x + selectedElement.width / 2) * zoom;
-        const top = selectedElement.y * zoom;
+        // Use stage-relative coordinates, taking zoom and pan into account
+        const left = (selectedElement.x + selectedElement.width / 2) * zoom + stagePos.x;
+        const top = selectedElement.y * zoom + stagePos.y;
+
+        const isImage = selectedElement.type === 'image';
+        const isShape = ['rectangle', 'triangle', 'star'].includes(selectedElement.type);
+
+        if (!isImage && !isShape) return null;
 
         return (
           <div 
@@ -105,7 +150,22 @@ export default function CanvasArea({ isSidebarCollapsed }: CanvasAreaProps) {
             }}
           >
             <div className="pointer-events-auto">
-              <ImageToolbar />
+              {isImage ? (
+                <ImageToolbar />
+              ) : (
+                <ShapeToolbar 
+                  element={selectedElement}
+                  onUpdate={(updates) => {
+                    const newElements = elements.map(el => 
+                      el.id === selectedId ? el.update(updates) : el
+                    );
+                    onElementsChange(newElements);
+                  }}
+                  onDownload={() => {
+                    console.log('Download', selectedElement);
+                  }}
+                />
+              )}
             </div>
           </div>
         );
