@@ -10,6 +10,7 @@ import TextCircleElement from './elements/TextCircleElement';
 import TextMessageSquareElement from './elements/TextMessageSquareElement';
 import TextArrowLeftElement from './elements/TextArrowLeftElement';
 import TextArrowRightElement from './elements/TextArrowRightElement';
+import DrawElement from './elements/DrawElement';
 import { ToolType } from './types/ToolType';
 import Konva from 'konva';
 import { 
@@ -18,7 +19,8 @@ import {
   ShapeElement as ShapeElementModel, 
   ImageElement as ImageElementModel, 
   TextElement as TextElementModel, 
-  TextShapeElement as TextShapeElementModel 
+  TextShapeElement as TextShapeElementModel,
+  DrawElement as DrawElementModel
 } from './types/BaseElement';
 
 interface EditorStageProps {
@@ -36,6 +38,7 @@ interface EditorStageProps {
   onDragStart?: () => void;
   onDragEnd?: () => void;
   onToolChange?: (tool: ToolType) => void;
+  drawingStyle?: { stroke: string; strokeWidth: number };
 }
 
 export default function EditorStage({
@@ -53,6 +56,7 @@ export default function EditorStage({
   onDragStart,
   onDragEnd,
   onToolChange,
+  drawingStyle,
 }: EditorStageProps) {
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
@@ -106,6 +110,18 @@ export default function EditorStage({
     // If clicked on empty area - remove all selections
     if (e.target === e.target.getStage()) {
       if (activeTool === 'select') {
+        // If we are deselecting, we should also stop editing any element
+        if (selectedId) {
+             const updatedElements = elements.map(el => {
+                if (el.id === selectedId && el.isEditing) {
+                    return el.update({ isEditing: false });
+                }
+                return el;
+             });
+             if (updatedElements !== elements) {
+                 onElementsChange(updatedElements);
+             }
+        }
         onSelect(null);
         return;
       }
@@ -119,6 +135,40 @@ export default function EditorStage({
 
       const { x, y } = getStagePos(stage, pointerPosition);
 
+      if (['pencil', 'pen'].includes(activeTool)) {
+         setIsDrawing(true);
+         setDrawStartPos({ x, y });
+         
+         const newEl = ElementFactory.createDefault(activeTool, 0, 0);
+         // For pencil/pen, we start with points in absolute coordinates (relative to stage)
+         // We set x,y to 0 during drawing, and normalize them on mouse up
+         const drawEl = newEl as DrawElementModel;
+         drawEl.points = [x, y];
+         drawEl.x = 0;
+         drawEl.y = 0;
+         
+         if (drawingStyle) {
+           drawEl.stroke = drawingStyle.stroke;
+           drawEl.strokeWidth = drawingStyle.strokeWidth;
+         }
+
+         setPreviewElement(drawEl);
+         
+         if (selectedId) {
+             const updatedElements = elements.map(el => {
+                if (el.id === selectedId && el.isEditing) {
+                    return el.update({ isEditing: false });
+                }
+                return el;
+             });
+             if (updatedElements !== elements) {
+                 onElementsChange(updatedElements);
+             }
+         }
+         onSelect(null);
+         return;
+      }
+
       if (['rectangle', 'circle', 'triangle', 'star', 'message-square', 'arrow-left', 'arrow-right', 'rectangle-text', 'circle-text', 'text', 'image'].includes(activeTool)) {
          setIsDrawing(true);
          setDrawStartPos({ x, y });
@@ -128,7 +178,18 @@ export default function EditorStage({
          newEl.height = 0;
          setPreviewElement(newEl);
          
-         // Deselect current
+         // Deselect current and stop editing
+         if (selectedId) {
+             const updatedElements = elements.map(el => {
+                if (el.id === selectedId && el.isEditing) {
+                    return el.update({ isEditing: false });
+                }
+                return el;
+             });
+             if (updatedElements !== elements) {
+                 onElementsChange(updatedElements);
+             }
+         }
          onSelect(null);
       }
       return;
@@ -138,6 +199,18 @@ export default function EditorStage({
     if (activeTool === 'select') {
       const clickedId = e.target.id() || e.target.getParent()?.id();
       if (clickedId) {
+        // If clicking a different element, stop editing the previous one
+        if (selectedId && selectedId !== clickedId) {
+             const updatedElements = elements.map(el => {
+                if (el.id === selectedId && el.isEditing) {
+                    return el.update({ isEditing: false });
+                }
+                return el;
+             });
+             if (updatedElements !== elements) {
+                 onElementsChange(updatedElements);
+             }
+        }
         onSelect(clickedId);
       }
     }
@@ -153,6 +226,14 @@ export default function EditorStage({
     if (!pointerPosition) return;
 
     const { x, y } = getStagePos(stage, pointerPosition);
+
+    if (['pencil', 'pen'].includes(activeTool)) {
+       const drawEl = previewElement as DrawElementModel;
+       // Add new point
+       const newPoints = (drawEl.points || []).concat([x, y]);
+       setPreviewElement(drawEl.update({ points: newPoints }));
+       return;
+    }
 
     const width = Math.abs(x - drawStartPos.x);
     const height = Math.abs(y - drawStartPos.y);
@@ -188,35 +269,63 @@ export default function EditorStage({
 
     const { x, y } = getStagePos(stage, pointerPosition);
     
-    // Calculate diagonal distance
-    const dx = x - drawStartPos.x;
-    const dy = y - drawStartPos.y;
-    const diagonal = Math.sqrt(dx * dx + dy * dy);
-
     let finalElement = previewElement;
 
-    // Threshold for click vs drag (e.g. 10 pixels)
-    if (diagonal < 10) {
-       // If it's a click on empty area and we are in a drawing mode, 
-       // reset to select tool instead of creating a default element.
-       if (activeTool !== 'select') {
-          setIsDrawing(false);
-          setPreviewElement(null);
-          onToolChange?.('select');
-          return;
+    if (['pencil', 'pen'].includes(activeTool)) {
+       const drawEl = previewElement as DrawElementModel;
+       const points = drawEl.points || [];
+       if (points.length < 4) { // Need at least 2 points
+           setIsDrawing(false);
+           setPreviewElement(null);
+           return;
        }
+       
+       // Normalize points
+       let minX = Infinity;
+       let minY = Infinity;
+       let maxX = -Infinity;
+       let maxY = -Infinity;
+       
+       for (let i = 0; i < points.length; i += 2) {
+           const px = points[i];
+           const py = points[i+1];
+           minX = Math.min(minX, px);
+           minY = Math.min(minY, py);
+           maxX = Math.max(maxX, px);
+           maxY = Math.max(maxY, py);
+       }
+       
+       const width = maxX - minX;
+       const height = maxY - minY;
+       
+       const newPoints = points.map((val, i) => {
+           return i % 2 === 0 ? val - minX : val - minY;
+       });
+       
+       finalElement = drawEl.update({
+           x: minX,
+           y: minY,
+           width: Math.max(width, 1),
+           height: Math.max(height, 1),
+           points: newPoints
+       });
+    } else {
+        // Calculate diagonal distance
+        const dx = x - drawStartPos.x;
+        const dy = y - drawStartPos.y;
+        const diagonal = Math.sqrt(dx * dx + dy * dy);
 
-       // The following code is unreachable because of the check above.
-       // It seems like click-to-create was intended but disabled.
-       // Commenting out to satisfy TypeScript.
-       
-       /*
-       // Create default size element centered at click or top-left at click
-       const defaultX = activeTool === 'image' ? drawStartPos.x - 100 : drawStartPos.x - 50;
-       const defaultY = activeTool === 'image' ? drawStartPos.y - 100 : drawStartPos.y - 50;
-       
-       finalElement = ElementFactory.createDefault(activeTool, defaultX, defaultY);
-       */
+        // Threshold for click vs drag (e.g. 10 pixels)
+        if (diagonal < 10) {
+           // If it's a click on empty area and we are in a drawing mode, 
+           // reset to select tool instead of creating a default element.
+           if (activeTool !== 'select') {
+              setIsDrawing(false);
+              setPreviewElement(null);
+              onToolChange?.('select');
+              return;
+           }
+        }
     }
 
     onElementsChange([...elements, finalElement]);
@@ -286,6 +395,7 @@ export default function EditorStage({
             onDragStart: onDragStart,
             onDragEnd: onDragEnd,
             draggable: activeTool === 'select',
+            isEditing: el.isEditing,
           };
 
           if (el.type === 'image') {
@@ -318,6 +428,14 @@ export default function EditorStage({
                 fontSize: (el as TextShapeElementModel).fontSize,
                 fontFamily: (el as TextShapeElementModel).fontFamily,
                 textColor: (el as TextShapeElementModel).textColor,
+                textStroke: (el as TextShapeElementModel).textStroke,
+                textStrokeWidth: (el as TextShapeElementModel).textStrokeWidth,
+                fontStyle: (el as TextShapeElementModel).fontStyle,
+                align: (el as TextShapeElementModel).align,
+                lineHeight: (el as TextShapeElementModel).lineHeight,
+                letterSpacing: (el as TextShapeElementModel).letterSpacing,
+                textDecoration: (el as TextShapeElementModel).textDecoration,
+                textTransform: (el as TextShapeElementModel).textTransform,
              };
 
              switch (el.type) {
@@ -334,6 +452,16 @@ export default function EditorStage({
                default:
                  return null;
              }
+          } else if (['pencil', 'pen'].includes(el.type)) {
+             return (
+               <DrawElement 
+                 {...commonProps}
+                 points={(el as DrawElementModel).points}
+                 stroke={(el as DrawElementModel).stroke}
+                 strokeWidth={(el as DrawElementModel).strokeWidth}
+                 tension={el.type === 'pen' ? 0.5 : 0}
+               />
+             );
           } else if (['rectangle', 'circle', 'triangle', 'star'].includes(el.type)) {
             return (
               <ShapeElement

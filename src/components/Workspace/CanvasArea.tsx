@@ -6,6 +6,9 @@ import ToolsPanel from './ToolsPanel';
 import { ToolType } from './types/ToolType';
 import ImageToolbar from './toolbars/ImageToolbar';
 import ShapeToolbar from './toolbars/ShapeToolbar';
+import DrawToolbar from './toolbars/DrawToolbar';
+import DrawSelectionToolbar from './toolbars/DrawSelectionToolbar';
+import TextToolBar from './toolbars/TextToolBar';
 import { ZoomIn, ZoomOut } from 'lucide-react';
 import { BaseElement } from './types/BaseElement';
 
@@ -34,6 +37,7 @@ export default function CanvasArea({
   const containerRef = useRef<HTMLDivElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  const [drawingStyle, setDrawingStyle] = useState({ stroke: '#000000', strokeWidth: 2 });
 
   useEffect(() => {
     // Center view on selection logic removed as requested
@@ -125,7 +129,38 @@ export default function CanvasArea({
           height={dimensions.height}
           onDragStart={() => setIsDragging(true)}
           onDragEnd={() => setIsDragging(false)}
+          drawingStyle={drawingStyle}
         />
+      )}
+
+      {/* Persistent DrawToolbar when in pencil/pen mode */}
+      {['pencil', 'pen'].includes(activeTool) && (
+        <div className="absolute z-50 left-1/2 top-4 -translate-x-1/2">
+           <DrawToolbar 
+              element={(() => {
+                  if (selectedId) {
+                      const el = elements.find(e => e.id === selectedId);
+                      if (el && ['pencil', 'pen'].includes(el.type)) {
+                          return el;
+                      }
+                  }
+                  return drawingStyle as any;
+              })()}
+              onUpdate={(updates) => {
+                  setDrawingStyle(prev => ({ ...prev, ...updates }));
+                  
+                  if (selectedId) {
+                      const el = elements.find(e => e.id === selectedId);
+                      if (el && ['pencil', 'pen'].includes(el.type)) {
+                          const newElements = elements.map(e => 
+                              e.id === selectedId ? e.update(updates) : e
+                          );
+                          onElementsChange(newElements);
+                      }
+                  }
+              }}
+           />
+        </div>
       )}
 
       {selectedId && !isDragging && (() => {
@@ -138,8 +173,41 @@ export default function CanvasArea({
 
         const isImage = selectedElement.type === 'image';
         const isShape = ['rectangle', 'triangle', 'star', 'circle', 'message-square', 'arrow-left', 'arrow-right', 'rectangle-text', 'circle-text'].includes(selectedElement.type);
+        const isDraw = ['pencil', 'pen'].includes(selectedElement.type);
 
-        if (!isImage && !isShape) return null;
+        // If current tool is pencil/pen, we use the top persistent toolbar, so don't show floating one for draw elements
+        if (isDraw && ['pencil', 'pen'].includes(activeTool)) return null;
+
+        if (!isImage && !isShape && !isDraw) return null;
+
+        // If in text editing mode, show TextToolBar
+        if (selectedElement.isEditing) {
+          return (
+            <div 
+              className="absolute z-50 pointer-events-none transition-all duration-75 ease-out"
+              style={{
+                left: left,
+                top: top,
+                transform: 'translate(-50%, -100%) translateY(-12px)'
+              }}
+            >
+              <div className="pointer-events-auto">
+                <TextToolBar 
+                  element={selectedElement}
+                  onUpdate={(updates) => {
+                    const newElements = elements.map(el => 
+                      el.id === selectedId ? el.update(updates) : el
+                    );
+                    onElementsChange(newElements);
+                  }}
+                  onDownload={() => {
+                    console.log('Download', selectedElement);
+                  }}
+                />
+              </div>
+            </div>
+          );
+        }
 
         return (
           <div 
@@ -153,6 +221,19 @@ export default function CanvasArea({
             <div className="pointer-events-auto">
               {isImage ? (
                 <ImageToolbar />
+              ) : isDraw ? (
+                <DrawSelectionToolbar 
+                  element={selectedElement}
+                  onUpdate={(updates) => {
+                    const newElements = elements.map(el => 
+                      el.id === selectedId ? el.update(updates) : el
+                    );
+                    onElementsChange(newElements);
+                  }}
+                  onDownload={() => {
+                    console.log('Download', selectedElement);
+                  }}
+                />
               ) : (
                 <ShapeToolbar 
                   element={selectedElement}

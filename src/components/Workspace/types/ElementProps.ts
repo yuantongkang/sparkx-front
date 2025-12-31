@@ -39,5 +39,10 @@ export interface TextShapeElementProps extends BaseElementProps {
   fontSize?: number;
   fontFamily?: string;
   textColor?: string;
+  textStroke?: string;
+  textStrokeWidth?: number;
+  isEditing?: boolean;
+  fontStyle?: string;
+  align?: string;
   children?: React.ReactNode;
 }

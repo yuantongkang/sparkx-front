@@ -17,12 +17,22 @@ export interface IElementState {
   fontSize?: number; // For text
   fontFamily?: string; // For text
   textColor?: string; // For text
+  textStroke?: string; // For text outline
+  textStrokeWidth?: number; // For text outline width
   stroke?: string;
   strokeWidth?: number;
   strokeStyle?: 'solid' | 'dashed' | 'dotted';
   cornerRadius?: number;
   sides?: number; // For polygon sides
   starInnerRadius?: number; // For star inner radius percentage (0-100)
+  isEditing?: boolean; // UI state for text editing
+  fontStyle?: string; // normal, bold, italic, italic bold
+  align?: string; // left, center, right
+  lineHeight?: number;
+  letterSpacing?: number;
+  textDecoration?: string; // underline, line-through
+  textTransform?: string; // uppercase, lowercase
+  points?: number[]; // For pencil and pen tools
 }
 
 export abstract class BaseElement {
@@ -36,6 +46,13 @@ export abstract class BaseElement {
   rotation: number;
   visible: boolean;
   locked: boolean;
+  isEditing?: boolean;
+  fontStyle?: string;
+  align?: string;
+  lineHeight?: number;
+  letterSpacing?: number;
+  textDecoration?: string;
+  textTransform?: string;
 
   constructor(state: IElementState) {
     this.id = state.id;
@@ -48,6 +65,13 @@ export abstract class BaseElement {
     this.rotation = state.rotation;
     this.visible = state.visible;
     this.locked = state.locked;
+    this.isEditing = state.isEditing;
+    this.fontStyle = state.fontStyle;
+    this.align = state.align;
+    this.lineHeight = state.lineHeight;
+    this.letterSpacing = state.letterSpacing;
+    this.textDecoration = state.textDecoration;
+    this.textTransform = state.textTransform;
   }
 
   // 返回一个新的实例以保持不可变性
@@ -70,6 +94,40 @@ export abstract class BaseElement {
       rotation: this.rotation,
       visible: this.visible,
       locked: this.locked,
+      isEditing: this.isEditing,
+      fontStyle: this.fontStyle,
+      align: this.align,
+      lineHeight: this.lineHeight,
+      letterSpacing: this.letterSpacing,
+      textDecoration: this.textDecoration,
+      textTransform: this.textTransform,
+      points: (this as any).points,
+    };
+  }
+}
+
+export class DrawElement extends BaseElement {
+  points: number[];
+  stroke: string;
+  strokeWidth: number;
+  
+  constructor(state: IElementState) {
+    super(state);
+    this.points = state.points || [];
+    this.stroke = state.stroke || '#000000';
+    this.strokeWidth = state.strokeWidth || 2;
+  }
+
+  clone(): DrawElement {
+    return new DrawElement(this.toState());
+  }
+
+  toState(): IElementState {
+    return {
+      ...super.toState(),
+      points: this.points,
+      stroke: this.stroke,
+      strokeWidth: this.strokeWidth,
     };
   }
 }
@@ -166,6 +224,8 @@ export class TextShapeElement extends ShapeElement {
   fontSize: number;
   fontFamily: string;
   textColor: string;
+  textStroke?: string;
+  textStrokeWidth?: number;
 
   constructor(state: IElementState) {
     super(state);
@@ -173,6 +233,14 @@ export class TextShapeElement extends ShapeElement {
     this.fontSize = state.fontSize || 14;
     this.fontFamily = state.fontFamily || 'Arial';
     this.textColor = state.textColor || '#ffffff';
+    this.textStroke = state.textStroke;
+    this.textStrokeWidth = state.textStrokeWidth;
+    this.fontStyle = state.fontStyle || 'normal';
+    this.align = state.align || 'center';
+    this.lineHeight = state.lineHeight || 1.2;
+    this.letterSpacing = state.letterSpacing || 0;
+    this.textDecoration = state.textDecoration || '';
+    this.textTransform = state.textTransform || '';
   }
 
   clone(): TextShapeElement {
@@ -186,6 +254,14 @@ export class TextShapeElement extends ShapeElement {
       fontSize: this.fontSize,
       fontFamily: this.fontFamily,
       textColor: this.textColor,
+      textStroke: this.textStroke,
+      textStrokeWidth: this.textStrokeWidth,
+      fontStyle: this.fontStyle,
+      align: this.align,
+      lineHeight: this.lineHeight,
+      letterSpacing: this.letterSpacing,
+      textDecoration: this.textDecoration,
+      textTransform: this.textTransform,
     };
   }
 }
@@ -198,6 +274,8 @@ export class ElementFactory {
       return new TextElement(state);
     } else if (['message-square', 'arrow-left', 'arrow-right', 'rectangle-text', 'circle-text'].includes(state.type)) {
        return new TextShapeElement(state);
+    } else if (['pencil', 'pen'].includes(state.type)) {
+      return new DrawElement(state);
     }
     return new ShapeElement(state);
   }
@@ -237,6 +315,17 @@ export class ElementFactory {
          text: 'Label',
          textColor: '#ffffff'
        });
+    }
+
+    if (['pencil', 'pen'].includes(type)) {
+      return new DrawElement({
+        ...baseState,
+        width: 0,
+        height: 0,
+        points: [],
+        stroke: '#000000',
+        strokeWidth: 2,
+      });
     }
 
     // 根据类型分配默认颜色

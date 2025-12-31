@@ -15,11 +15,20 @@ export default function TextShapeElement(props: TextShapeElementProps) {
     fontSize = 14, 
     fontFamily = 'Arial', 
     textColor = '#ffffff',
+    textStroke,
+    textStrokeWidth,
+    isEditing: isEditingProp,
+    fontStyle = 'normal',
+    align = 'center',
+    lineHeight = 1.2,
+    letterSpacing = 0,
+    textDecoration = '',
+    textTransform = '',
     onChange,
     children
   } = props;
 
-  const [isEditing, setIsEditing] = useState(false);
+  const isEditing = isEditingProp || false;
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -29,11 +38,12 @@ export default function TextShapeElement(props: TextShapeElementProps) {
   }, [isEditing]);
 
   const handleDblClick = () => {
-    setIsEditing(true);
+    onChange({ isEditing: true });
   };
 
-  const handleBlur = () => {
-    setIsEditing(false);
+  const handleBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+    // Intentionally left empty to prevent stopping editing when clicking toolbar.
+    // Editing will be stopped by global click handlers or selection changes.
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -54,6 +64,47 @@ export default function TextShapeElement(props: TextShapeElementProps) {
     onChange(newAttrs);
   };
 
+  const getCssStyles = (fontStyle: string) => {
+    const styles: React.CSSProperties = {};
+    if (fontStyle.includes('bold')) {
+      styles.fontWeight = 'bold';
+    } else {
+      styles.fontWeight = 'normal';
+    }
+    
+    if (fontStyle.includes('italic')) {
+       styles.fontStyle = 'italic';
+     } else {
+       styles.fontStyle = 'normal';
+     }
+
+     if (textDecoration) {
+         styles.textDecoration = textDecoration;
+         // Handle overline if not supported natively by some browsers in textarea, 
+         // but 'overline' is standard CSS.
+      }
+
+     if (textTransform) {
+        styles.textTransform = textTransform as any;
+     }
+
+     if (lineHeight) {
+        styles.lineHeight = lineHeight;
+     }
+
+     if (letterSpacing) {
+        // CSS letter-spacing is usually in px or em, but Konva might use px directly
+        // The input in advanced panel is percentage or similar? Let's assume px for now or em
+        // Actually the panel input is just a number. 
+        // Konva Text letterSpacing is in pixels.
+        styles.letterSpacing = `${letterSpacing}px`;
+     }
+
+     return styles;
+   };
+
+  const cssFontStyles = getCssStyles(fontStyle);
+
   return (
     <BaseElement {...props} onDblClick={handleDblClick} onChange={handleShapeChange}>
        {children}
@@ -61,10 +112,16 @@ export default function TextShapeElement(props: TextShapeElementProps) {
           text={text}
           fontSize={fontSize}
           fontFamily={fontFamily}
+          fontStyle={fontStyle}
+          align={align}
+          lineHeight={lineHeight}
+          letterSpacing={letterSpacing}
+          textDecoration={textDecoration}
           fill={textColor}
+          stroke={textStroke}
+          strokeWidth={textStrokeWidth}
           width={width}
           height={height}
-          align="center"
           verticalAlign="middle"
           offsetX={0} 
           offsetY={0}
@@ -92,10 +149,17 @@ export default function TextShapeElement(props: TextShapeElementProps) {
                 color: textColor,
                 fontSize: `${fontSize}px`,
                 fontFamily: fontFamily,
-                textAlign: 'center',
-                lineHeight: 'normal',
+                fontWeight: cssFontStyles.fontWeight,
+                fontStyle: cssFontStyles.fontStyle,
+                textDecoration: cssFontStyles.textDecoration,
+                textTransform: cssFontStyles.textTransform,
+                lineHeight: cssFontStyles.lineHeight,
+                letterSpacing: cssFontStyles.letterSpacing,
+                textAlign: align as any,
+                // lineHeight: 'normal',
                 paddingTop: height ? (height - (fontSize || 14)) / 2 + 'px' : '0px',
                 // This centering is approximate
+                WebkitTextStroke: textStroke && textStrokeWidth ? `${textStrokeWidth}px ${textStroke}` : 'initial'
               }}
             />
           </Html>
