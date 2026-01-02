@@ -33,6 +33,7 @@ export interface IElementState {
   textDecoration?: string; // underline, line-through
   textTransform?: string; // uppercase, lowercase
   points?: number[]; // For pencil and pen tools
+  fill?: string; // For pencil and pen tools
 }
 
 export abstract class BaseElement {
@@ -110,12 +111,14 @@ export class DrawElement extends BaseElement {
   points: number[];
   stroke: string;
   strokeWidth: number;
+  fill?: string;
   
   constructor(state: IElementState) {
     super(state);
     this.points = state.points || [];
     this.stroke = state.stroke || '#000000';
     this.strokeWidth = state.strokeWidth || 2;
+    this.fill = state.fill;
   }
 
   clone(): DrawElement {
@@ -128,6 +131,7 @@ export class DrawElement extends BaseElement {
       points: this.points,
       stroke: this.stroke,
       strokeWidth: this.strokeWidth,
+      fill: this.fill,
     };
   }
 }

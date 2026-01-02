@@ -3,12 +3,12 @@
 import React from 'react';
 import { PlusCircle, History, Share2, Copy, Minimize2, Paperclip, AtSign, Lightbulb, Zap, Globe, Box, ArrowUp, ChevronLeft, Sparkles } from 'lucide-react';
 
-interface RightPanelProps {
+interface ChatPanelProps {
   isCollapsed: boolean;
   togglePanel: () => void;
 }
 
-export default function RightPanel({ isCollapsed, togglePanel }: RightPanelProps) {
+export default function ChatPanel({ isCollapsed, togglePanel }: ChatPanelProps) {
   if (isCollapsed) {
     return (
       <button 

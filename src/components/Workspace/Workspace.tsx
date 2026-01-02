@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import Sidebar from './Sidebar';
+import HierarchyPanel from './hierarchy/HierarchyPanel';
 import CanvasArea from './CanvasArea';
-import RightPanel from './RightPanel';
+import ChatPanel from './ChatPanel';
 import { BaseElement, ElementFactory } from './types/BaseElement';
 
-export default function AssetsEditor() {
+export default function Workspace() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
 
@@ -31,7 +31,7 @@ export default function AssetsEditor() {
   return (
     <div className="flex h-screen w-full bg-gray-50">
       <div className={`transition-all duration-300 flex-shrink-0 ${isSidebarCollapsed ? 'w-0 p-0' : 'w-auto p-4 h-full'}`}>
-        <Sidebar 
+        <HierarchyPanel 
           isCollapsed={isSidebarCollapsed} 
           toggleSidebar={toggleSidebar}
           elements={elements}
@@ -51,7 +51,7 @@ export default function AssetsEditor() {
       </div>
 
       <div className={`transition-all duration-300 ${isRightPanelCollapsed ? 'w-0 p-0' : 'w-auto p-4 h-full'}`}>
-        <RightPanel isCollapsed={isRightPanelCollapsed} togglePanel={toggleRightPanel} />
+        <ChatPanel isCollapsed={isRightPanelCollapsed} togglePanel={toggleRightPanel} />
       </div>
     </div>
   );

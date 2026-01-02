@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect } from 'react';
-import { Stage, Layer, Transformer } from 'react-konva';
+import { Stage, Layer, Transformer, Circle } from 'react-konva';
 import ImageElement from './elements/image/Element';
 import ShapeElement from './elements/shape/Element';
 import TextElement from './elements/text/Element';
@@ -65,6 +65,7 @@ export default function EditorStage({
   const [isDrawing, setIsDrawing] = React.useState(false);
   const [drawStartPos, setDrawStartPos] = React.useState({ x: 0, y: 0 });
   const [previewElement, setPreviewElement] = React.useState<BaseElementModel | null>(null);
+  const [isClosingPath, setIsClosingPath] = React.useState(false);
 
   // Handle stage position updates (centering)
   useEffect(() => {
@@ -163,6 +164,7 @@ export default function EditorStage({
       
       setIsDrawing(false);
       setPreviewElement(null);
+      setIsClosingPath(false);
   };
 
   const handleStageDblClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -274,7 +276,7 @@ export default function EditorStage({
                  const startX = points[0];
                  const startY = points[1];
                  const dist = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
-                 if (dist < 10) {
+                 if (dist < 20) {
                      // Close path
                      finishPenDrawing(drawEl, true);
                      return;
@@ -362,6 +364,26 @@ export default function EditorStage({
            points[points.length - 2] = x;
            points[points.length - 1] = y;
            setPreviewElement(drawEl.update({ points }));
+
+           // Check if we can close path
+           if (points.length >= 6) { // At least start + 1 point + cursor point (2*3=6 coords)
+             const startX = points[0];
+             const startY = points[1];
+             const dist = Math.sqrt(Math.pow(x - startX, 2) + Math.pow(y - startY, 2));
+             
+             // Increase threshold to 20px
+             if (dist < 20) {
+                 setIsClosingPath(true);
+                 // Snap the last point to the start point
+                 points[points.length - 2] = startX;
+                 points[points.length - 1] = startY;
+                 setPreviewElement(drawEl.update({ points }));
+             } else {
+                 setIsClosingPath(false);
+             }
+           } else {
+             setIsClosingPath(false);
+           }
        }
        return;
     }
@@ -395,6 +417,7 @@ export default function EditorStage({
     if (!pointerPosition) {
        setIsDrawing(false);
        setPreviewElement(null);
+       setIsClosingPath(false);
        return;
     }
 
@@ -459,6 +482,7 @@ export default function EditorStage({
            if (activeTool !== 'select') {
               setIsDrawing(false);
               setPreviewElement(null);
+              setIsClosingPath(false);
               onToolChange?.('select');
               return;
            }
@@ -471,6 +495,7 @@ export default function EditorStage({
     
     setIsDrawing(false);
     setPreviewElement(null);
+    setIsClosingPath(false);
   };
 
   const handleElementChange = (id: string, newAttrs: any) => {
@@ -597,15 +622,19 @@ export default function EditorStage({
                  points={(el as DrawElementModel).points}
                  stroke={(el as DrawElementModel).stroke}
                  strokeWidth={(el as DrawElementModel).strokeWidth}
+                 fill={(el as DrawElementModel).fill}
                />
              );
           } else if (el.type === 'pen') {
              return (
                <PenElement 
                  {...commonProps}
+                 // If it is the preview element, treat it as selected so nodes are shown
+                 isSelected={commonProps.isSelected || el.id === previewElement?.id}
                  points={(el as DrawElementModel).points}
                  stroke={(el as DrawElementModel).stroke}
                  strokeWidth={(el as DrawElementModel).strokeWidth}
+                 fill={(el as DrawElementModel).fill}
                />
              );
           } else if (['rectangle', 'circle', 'triangle', 'star'].includes(el.type)) {
@@ -635,6 +664,18 @@ export default function EditorStage({
             return newBox;
           }}
         />
+        
+        {/* Draw start point indicator for closing path */}
+        {isClosingPath && activeTool === 'pen' && isDrawing && previewElement && (
+           <Circle 
+             x={(previewElement as DrawElementModel).points?.[0] || 0}
+             y={(previewElement as DrawElementModel).points?.[1] || 0}
+             radius={8}
+             stroke="#3b82f6"
+             strokeWidth={2}
+             fill="transparent"
+           />
+        )}
       </Layer>
     </Stage>
   );

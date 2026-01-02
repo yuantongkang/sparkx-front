@@ -8,6 +8,7 @@ export interface DrawElementProps extends BaseElementProps {
   stroke?: string;
   strokeWidth?: number;
   tension?: number;
+  fill?: string;
 }
 
 export default function PencilElement(props: DrawElementProps) {
@@ -15,6 +16,7 @@ export default function PencilElement(props: DrawElementProps) {
     points = [], 
     stroke = '#000000', 
     strokeWidth = 2, 
+    fill = 'transparent',
     // tension is ignored for pencil
     width,
     height 
@@ -29,6 +31,7 @@ export default function PencilElement(props: DrawElementProps) {
         points={points}
         stroke={stroke}
         strokeWidth={strokeWidth}
+        fill={fill}
         tension={0}
         lineCap="round"
         lineJoin="round"

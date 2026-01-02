@@ -2,9 +2,9 @@
 
 import React, { useState } from 'react';
 import { ChevronRight, Eye, Lock, ChevronUp, ChevronDown, Minimize2, Image as ImageIcon, Layers } from 'lucide-react';
-import { BaseElement } from './types/BaseElement';
+import { BaseElement } from '../types/BaseElement';
 
-interface SidebarProps {
+interface HierarchyPanelProps {
   isCollapsed: boolean;
   toggleSidebar: () => void;
   elements: BaseElement[];
@@ -12,7 +12,7 @@ interface SidebarProps {
   onSelect: (id: string | null) => void;
 }
 
-export default function Sidebar({ isCollapsed, toggleSidebar, elements, selectedId, onSelect }: SidebarProps) {
+export default function HierarchyPanel({ isCollapsed, toggleSidebar, elements, selectedId, onSelect }: HierarchyPanelProps) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(true);
 
   if (isCollapsed) {
