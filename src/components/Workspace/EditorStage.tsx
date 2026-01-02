@@ -2,16 +2,16 @@
 
 import React, { useRef, useEffect } from 'react';
 import { Stage, Layer, Transformer, Circle } from 'react-konva';
-import ImageElement from './scene/elements/image/Element';
-import ShapeElement from './scene/elements/shape/Element';
-import TextElement from './scene/elements/text/Element';
-import TextRectangleElement from './scene/elements/text-rectangle/Element';
-import TextCircleElement from './scene/elements/text-circle/Element';
-import TextChatBubbleElement from './scene/elements/chat-bubble/Element';
-import TextArrowLeftElement from './scene/elements/arrow/LeftElement';
-import TextArrowRightElement from './scene/elements/arrow/RightElement';
-import PencilElement from './scene/elements/pencil/Element';
-import PenElement from './scene/elements/pen/Element';
+import ImageElement from './editor/elements/image/Element';
+import ShapeElement from './editor/elements/shape/Element';
+import TextElement from './editor/elements/text/Element';
+import TextRectangleElement from './editor/elements/text-rectangle/Element';
+import TextCircleElement from './editor/elements/text-circle/Element';
+import TextChatBubbleElement from './editor/elements/chat-bubble/Element';
+import TextArrowLeftElement from './editor/elements/arrow/LeftElement';
+import TextArrowRightElement from './editor/elements/arrow/RightElement';
+import PencilElement from './editor/elements/pencil/Element';
+import PenElement from './editor/elements/pen/Element';
 import { ToolType } from './types/ToolType';
 import Konva from 'konva';
 import { 

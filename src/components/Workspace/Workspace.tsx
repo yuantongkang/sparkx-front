@@ -7,12 +7,12 @@ import GamePanel from './game/GamePanel';
 import CanvasArea from './CanvasArea';
 import ChatPanel from './chat/ChatPanel';
 import { BaseElement, ElementFactory } from './types/BaseElement';
-import { Clapperboard, Gamepad2, Layers, FolderOpen } from 'lucide-react';
+import { Clapperboard, Gamepad2, Layers, FolderOpen, PenTool } from 'lucide-react';
 
 export default function Workspace() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isRightPanelCollapsed, setIsRightPanelCollapsed] = useState(false);
-  const [viewMode, setViewMode] = useState<'scene' | 'game'>('scene');
+  const [viewMode, setViewMode] = useState<'editor' | 'game'>('editor');
   const [leftPanel, setLeftPanel] = useState<'hierarchy' | 'project'>('hierarchy');
 
   // Centralized State
@@ -75,11 +75,11 @@ export default function Workspace() {
         {/* View Mode Switcher */}
         <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-white p-1 rounded-lg shadow-sm border border-gray-200 flex items-center z-50">
           <button 
-            onClick={() => setViewMode('scene')}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'scene' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
+            onClick={() => setViewMode('editor')}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${viewMode === 'editor' ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-900'}`}
           >
-            <Clapperboard size={16} />
-            Scene
+            <PenTool size={16} />
+            Editor
           </button>
           <button 
             onClick={() => setViewMode('game')}
@@ -90,7 +90,8 @@ export default function Workspace() {
           </button>
         </div>
 
-        {viewMode === 'scene' ? (
+        
+        {viewMode === 'editor' ? (
           <CanvasArea 
             isSidebarCollapsed={isSidebarCollapsed}
             elements={elements}
