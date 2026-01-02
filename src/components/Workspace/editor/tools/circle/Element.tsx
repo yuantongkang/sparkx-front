@@ -1,6 +1,6 @@
 import React from 'react';
 import { Ellipse, Rect } from 'react-konva';
-import { BaseElement } from '../BaseElement';
+import { ElementWrapper } from '../ElementWrapper';
 import { ShapeElementProps } from '../shape/Element';
 
 export default function CircleElement(props: ShapeElementProps) {
@@ -15,7 +15,7 @@ export default function CircleElement(props: ShapeElementProps) {
   };
 
   return (
-    <BaseElement {...props}>
+    <ElementWrapper {...props}>
       {cornerRadius !== undefined ? (
         <Rect
           width={width}
@@ -39,6 +39,6 @@ export default function CircleElement(props: ShapeElementProps) {
         />
       )}
       {children}
-    </BaseElement>
+    </ElementWrapper>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Text as KonvaText } from 'react-konva';
 import { Html } from 'react-konva-utils';
-import { BaseElement } from './BaseElement';
+import { ElementWrapper } from './ElementWrapper';
 import { BaseElementProps, TextShapeElementProps } from '../../types/ElementProps';
 import { ToolType } from '../../types/ToolType';
 
@@ -106,7 +106,7 @@ export default function TextShapeElement(props: TextShapeElementProps) {
   const cssFontStyles = getCssStyles(fontStyle);
 
   return (
-    <BaseElement {...props} onDblClick={handleDblClick} onChange={handleShapeChange}>
+    <ElementWrapper {...props} onDblClick={handleDblClick} onChange={handleShapeChange}>
        {children}
        <KonvaText
           text={text}
@@ -164,6 +164,6 @@ export default function TextShapeElement(props: TextShapeElementProps) {
             />
           </Html>
        )}
-    </BaseElement>
+    </ElementWrapper>
   );
 }

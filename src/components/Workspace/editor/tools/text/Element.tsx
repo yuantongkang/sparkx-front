@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Text as KonvaText } from 'react-konva';
-import { BaseElement, BaseElementProps } from '../BaseElement';
+import { ElementWrapper, BaseElementProps } from '../ElementWrapper';
 import { Html } from 'react-konva-utils';
 
 interface TextElementProps extends BaseElementProps {
@@ -35,7 +35,7 @@ export default function TextElement(props: TextElementProps) {
   // Better yet, let's support double click to edit via parent handling.
 
   return (
-    <BaseElement {...props}>
+    <ElementWrapper {...props}>
        <KonvaText
          text={text}
          fontSize={fontSize}
@@ -44,6 +44,6 @@ export default function TextElement(props: TextElementProps) {
          width={width}
          // height={height} // Text height is usually auto unless we wrap
        />
-    </BaseElement>
+    </ElementWrapper>
   );
 }

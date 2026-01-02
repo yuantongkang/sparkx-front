@@ -1,6 +1,6 @@
 import React from 'react';
 import { Line, Circle } from 'react-konva';
-import { BaseElement } from '../BaseElement';
+import { ElementWrapper } from '../ElementWrapper';
 import { BaseElementProps } from '../../../types/ElementProps';
 
 export interface DrawElementProps extends BaseElementProps {
@@ -159,7 +159,7 @@ export default function PenElement(props: DrawElementProps) {
   };
 
   return (
-    <BaseElement {...props}>
+    <ElementWrapper {...props}>
       <Line
         points={points}
         stroke={stroke}
@@ -175,6 +175,6 @@ export default function PenElement(props: DrawElementProps) {
         onTap={handleLineClick}
       />
       {renderNodes()}
-    </BaseElement>
+    </ElementWrapper>
   );
 }

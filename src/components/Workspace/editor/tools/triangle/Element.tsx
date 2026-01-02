@@ -1,6 +1,6 @@
 import React from 'react';
 import { Path } from 'react-konva';
-import { BaseElement } from '../BaseElement';
+import { ElementWrapper } from '../ElementWrapper';
 import { ShapeElementProps } from '../shape/Element';
 
 export default function TriangleElement(props: ShapeElementProps) {
@@ -111,7 +111,7 @@ export default function TriangleElement(props: ShapeElementProps) {
   }
 
   return (
-    <BaseElement {...props}>
+    <ElementWrapper {...props}>
       <Path
         data={polygonPathData}
         fill={color}
@@ -120,6 +120,6 @@ export default function TriangleElement(props: ShapeElementProps) {
         dash={getDash()}
       />
       {children}
-    </BaseElement>
+    </ElementWrapper>
   );
 }

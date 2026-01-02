@@ -1,6 +1,6 @@
 import React from 'react';
 import { Line } from 'react-konva';
-import { BaseElement } from '../BaseElement';
+import { ElementWrapper } from '../ElementWrapper';
 import { BaseElementProps } from '../../../types/ElementProps';
 
 export interface DrawElementProps extends BaseElementProps {
@@ -26,7 +26,7 @@ export default function PencilElement(props: DrawElementProps) {
   // If we normalize points, we don't need to do anything special here.
   
   return (
-    <BaseElement {...props}>
+    <ElementWrapper {...props}>
       <Line
         points={points}
         stroke={stroke}
@@ -38,6 +38,6 @@ export default function PencilElement(props: DrawElementProps) {
         // Ensure hit detection works well
         hitStrokeWidth={Math.max(strokeWidth, 10)}
       />
-    </BaseElement>
+    </ElementWrapper>
   );
 }

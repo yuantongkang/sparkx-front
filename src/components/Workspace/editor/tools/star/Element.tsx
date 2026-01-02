@@ -1,6 +1,6 @@
 import React from 'react';
 import { Path } from 'react-konva';
-import { BaseElement } from '../BaseElement';
+import { ElementWrapper } from '../ElementWrapper';
 import { ShapeElementProps } from '../shape/Element';
 
 export default function StarElement(props: ShapeElementProps) {
@@ -120,7 +120,7 @@ export default function StarElement(props: ShapeElementProps) {
   }
 
   return (
-    <BaseElement {...props}>
+    <ElementWrapper {...props}>
       <Path
         data={starPathData}
         fill={color}
@@ -129,6 +129,6 @@ export default function StarElement(props: ShapeElementProps) {
         dash={getDash()}
       />
       {children}
-    </BaseElement>
+    </ElementWrapper>
   );
 }

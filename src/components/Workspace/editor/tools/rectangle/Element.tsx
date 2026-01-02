@@ -1,6 +1,6 @@
 import React from 'react';
 import { Rect } from 'react-konva';
-import { BaseElement } from '../BaseElement';
+import { ElementWrapper } from '../ElementWrapper';
 import { ShapeElementProps } from '../shape/Element';
 
 export default function RectangleElement(props: ShapeElementProps) {
@@ -15,7 +15,7 @@ export default function RectangleElement(props: ShapeElementProps) {
   };
 
   return (
-    <BaseElement {...props}>
+    <ElementWrapper {...props}>
       <Rect
         width={width}
         height={height}
@@ -26,6 +26,6 @@ export default function RectangleElement(props: ShapeElementProps) {
         cornerRadius={cornerRadius || 0}
       />
       {children}
-    </BaseElement>
+    </ElementWrapper>
   );
 }

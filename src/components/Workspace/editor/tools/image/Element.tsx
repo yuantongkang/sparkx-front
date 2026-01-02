@@ -1,7 +1,7 @@
 import React from 'react';
 import { Image as KonvaImage } from 'react-konva';
 import useImage from 'use-image';
-import { BaseElement, BaseElementProps } from '../BaseElement';
+import { ElementWrapper, BaseElementProps } from '../ElementWrapper';
 
 interface ImageElementProps extends BaseElementProps {
   src?: string;
@@ -13,12 +13,12 @@ export default function ImageElement(props: ImageElementProps) {
   const [img] = useImage(imageUrl, 'anonymous');
 
   return (
-    <BaseElement {...props}>
+    <ElementWrapper {...props}>
       <KonvaImage
         image={img}
         width={props.width}
         height={props.height}
       />
-    </BaseElement>
+    </ElementWrapper>
   );
 }

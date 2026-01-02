@@ -7,14 +7,14 @@ export { type BaseElementProps }; // Re-export for compatibility if needed, but 
 
 
 /**
- * BaseElement handles common Konva element behaviors:
+ * ElementWrapper handles common Konva element behaviors:
  * - Position (x, y)
  * - Rotation
  * - Selection handling (onClick/onTap)
  * - Dragging logic (onDragStart, onDragEnd)
  * - Transformation logic (via Transformer in parent, but this updates state)
  */
-export const BaseElement: React.FC<BaseElementProps> = ({
+export const ElementWrapper: React.FC<BaseElementProps> = ({
   id,
   x,
   y,
