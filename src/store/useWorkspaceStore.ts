@@ -84,12 +84,7 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         elements: state.elements 
       }), // Only track elements history, ignore selection/tool changes
       equality: (a, b) => {
-          // Custom equality check if needed, or rely on default shallow compare
-          // Since elements are immutable objects, shallow compare of the array usually works 
-          // if we replace the array on change.
-          // However, we need to be careful.
-          // Let's rely on default for now.
-          return a === b;
+          return a.elements === b.elements;
       }
     }
   )

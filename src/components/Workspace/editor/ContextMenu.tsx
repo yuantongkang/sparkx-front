@@ -16,13 +16,15 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, elementId, onClo
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        // Prevent the click from triggering other actions (like deselecting elements)
+        event.stopPropagation();
         onClose();
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside, true);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside, true);
     };
   }, [onClose]);
 
