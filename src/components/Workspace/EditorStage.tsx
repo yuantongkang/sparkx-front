@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from 'react';
-import { Stage, Layer, Transformer, Circle } from 'react-konva';
+import { Stage, Layer, Transformer, Circle, Line } from 'react-konva';
 import { ToolType } from './types/ToolType';
 import Konva from 'konva';
 import { 
@@ -14,6 +14,7 @@ import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 import { ToolFactory } from './editor/tools/ToolFactory';
 import { IMouseAction, ToolContext } from './editor/interfaces/IMouseAction';
 import { getElementComponent } from './editor/tools/ElementRegistry';
+import { getSnapShift } from './editor/utils/snapUtils';
 
 
 interface EditorStageProps {
@@ -41,7 +42,7 @@ export default function EditorStage({
   drawingStyle,
   onContextMenu,
 }: EditorStageProps) {
-  const { elements, selectedId } = useWorkspaceStore();
+  const { elements, selectedId, guidelines, setGuidelines } = useWorkspaceStore();
   const stageRef = useRef<Konva.Stage>(null);
   const transformerRef = useRef<Konva.Transformer>(null);
 
@@ -197,10 +198,47 @@ export default function EditorStage({
             if (newBox.width < 5 || newBox.height < 5) {
               return oldBox;
             }
+
+            // Snap logic
+            if (transformerRef.current) {
+               const layer = transformerRef.current.getLayer();
+               if (layer) {
+                  const otherNodes = layer.getChildren().filter(node => {
+                     const transformedNode = transformerRef.current?.nodes()[0];
+                     return node !== transformedNode && node !== transformerRef.current && node.getClassName() === 'Group' && node.id();
+                  });
+                  
+                  const { shiftX, shiftY, guidelines } = getSnapShift(newBox, otherNodes, layer);
+                  
+                  if (guidelines.length > 0) {
+                     setGuidelines(guidelines);
+                  } else if (useWorkspaceStore.getState().guidelines.length > 0) {
+                     setGuidelines([]);
+                  }
+                  
+                  return {
+                     ...newBox,
+                     x: newBox.x + shiftX,
+                     y: newBox.y + shiftY,
+                  };
+               }
+            }
+
             return newBox;
           }}
         />
         
+        {/* Alignment Guidelines */}
+        {guidelines.map((line) => (
+          <Line
+            key={line.id}
+            points={[line.x1, line.y1, line.x2, line.y2]}
+            stroke="#DD7D4E"
+            strokeWidth={1}
+            dash={[4, 4]}
+          />
+        ))}
+
         {/* Draw start point indicator for closing path */}
         {isClosingPath && activeTool === 'pen' && isDrawing && previewElement && (
            <Circle 

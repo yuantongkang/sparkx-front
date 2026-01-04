@@ -36,12 +36,15 @@ export const useWorkspaceStore = create<WorkspaceState>()(
         elements: initialElements,
         selectedId: null,
         activeTool: 'select',
+        guidelines: [],
 
         setElements: (elements) => set({ elements }),
         
         selectElement: (id) => set({ selectedId: id }),
         
         setActiveTool: (tool) => set({ activeTool: tool }),
+
+        setGuidelines: (guidelines) => set({ guidelines }),
         
         addElement: (element) => set((state) => ({ 
           elements: [...state.elements, element] 

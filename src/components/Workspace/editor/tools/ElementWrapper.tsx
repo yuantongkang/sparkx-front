@@ -4,6 +4,7 @@ import Konva from 'konva';
 import { BaseElementProps } from '../../types/ElementProps';
 import { ToolType } from '../../types/ToolType';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
+import { calculateSnap } from '../utils/snapUtils';
 
 export { type BaseElementProps };
 
@@ -31,7 +32,7 @@ export const ElementWrapper: React.FC<BaseElementProps & { children?: React.Reac
   ...rest
 }) => {
   const groupRef = useRef<Konva.Group>(null);
-  const { activeTool, selectElement, updateElement } = useWorkspaceStore();
+  const { activeTool, selectElement, updateElement, setGuidelines } = useWorkspaceStore();
 
   const handleSelect = (e: Konva.KonvaEventObject<MouseEvent>) => {
     if (activeTool === 'select' && !locked) {
@@ -42,11 +43,34 @@ export const ElementWrapper: React.FC<BaseElementProps & { children?: React.Reac
 
   const handleDragEnd = (e: Konva.KonvaEventObject<DragEvent>) => {
     if (locked) return;
+    setGuidelines([]);
     updateElement(id, {
       x: e.target.x(),
       y: e.target.y(),
       rotation: e.target.rotation(),
     });
+  };
+
+  const handleDragMove = (e: Konva.KonvaEventObject<DragEvent>) => {
+    if (locked) return;
+    
+    const layer = e.target.getLayer();
+    if (!layer) return;
+
+    const otherNodes = layer.getChildren().filter(node => {
+      return node !== e.target && node.getClassName() === 'Group' && node.id();
+    });
+
+    const result = calculateSnap(e.target, otherNodes);
+
+    if (result.x !== null) {
+      e.target.x(result.x);
+    }
+    if (result.y !== null) {
+      e.target.y(result.y);
+    }
+
+    setGuidelines(result.guidelines);
   };
 
   const handleDblClick = (e: Konva.KonvaEventObject<MouseEvent>) => {
@@ -72,8 +96,10 @@ export const ElementWrapper: React.FC<BaseElementProps & { children?: React.Reac
       onDblClick={handleDblClick}
       onDblTap={handleDblClick}
       draggable={draggable && activeTool === 'select' && !isEditing && !locked}
+      onDragMove={handleDragMove}
       onDragEnd={handleDragEnd}
       onTransformEnd={(e) => {
+        setGuidelines([]);
         // This is usually handled by the Transformer attached to the node, 
         // but if we wrap everything in a Group, the transformer attaches to the Group.
         const node = e.target;
