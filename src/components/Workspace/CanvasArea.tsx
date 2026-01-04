@@ -12,6 +12,7 @@ import TextInspectorBar from './editor/tools/text/InspectorBar';
 import { ZoomIn, ZoomOut } from 'lucide-react';
 import { useWorkspaceStore } from '@/store/useWorkspaceStore';
 import { ContextMenu } from './editor/ContextMenu';
+import HistoryControls from './editor/HistoryControls';
 
 // Dynamically import EditorStage to avoid SSR issues with Konva
 const EditorStage = dynamic(() => import('./EditorStage'), { ssr: false });
@@ -269,6 +270,9 @@ export default function CanvasArea({
         <span className="min-w-[40px] text-center font-medium">{Math.round(zoom * 100)}%</span>
         <button className="p-1 hover:text-black transition-colors" onClick={handleZoomIn}><ZoomIn size={16} /></button>
       </div>
+
+      {/* History Controls */}
+      <HistoryControls />
     </div>
   );
 }

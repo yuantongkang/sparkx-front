@@ -17,8 +17,6 @@ export default function HierarchyPanel({ isCollapsed, toggleSidebar }: Hierarchy
   const selectElement = store?.selectElement || (() => {});
   const updateElement = store?.updateElement || (() => {});
   
-  const [isHistoryOpen, setIsHistoryOpen] = useState(true);
-
   if (isCollapsed) {
     return (
       <button 
@@ -32,37 +30,7 @@ export default function HierarchyPanel({ isCollapsed, toggleSidebar }: Hierarchy
 
   return (
     <div className="w-[260px] bg-white border border-gray-100 flex flex-col h-full transition-all duration-300 relative select-none rounded-3xl shadow-lg overflow-hidden">
-      {/* History Header */}
-      <div 
-        className="p-4 border-b border-gray-100 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
-        onClick={() => setIsHistoryOpen(!isHistoryOpen)}
-      >
-        <span className="font-bold text-gray-800">历史记录</span>
-        {isHistoryOpen ? <ChevronUp size={16} className="text-gray-500" /> : <ChevronDown size={16} className="text-gray-500" />}
-      </div>
       
-      {/* History Content */}
-      {isHistoryOpen && (
-        <div className="p-4 flex flex-col items-center justify-center border-b border-gray-100 bg-gray-50/50">
-           <div className="flex gap-2 mb-2 w-full">
-             <button 
-                className="flex-1 py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => useWorkspaceStore.temporal.getState().undo()}
-                disabled={useWorkspaceStore.temporal.getState().pastStates.length === 0}
-             >
-                撤销 ({useWorkspaceStore.temporal.getState().pastStates.length})
-             </button>
-             <button 
-                className="flex-1 py-1.5 px-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                onClick={() => useWorkspaceStore.temporal.getState().redo()}
-                disabled={useWorkspaceStore.temporal.getState().futureStates.length === 0}
-             >
-                重做 ({useWorkspaceStore.temporal.getState().futureStates.length})
-             </button>
-           </div>
-        </div>
-      )}
-
       {/* Layers Header */}
       <div className="p-4 pb-2">
         <span className="font-bold text-gray-800">图层 ({elements.length})</span>
