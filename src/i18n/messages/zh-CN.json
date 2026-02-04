@@ -79,6 +79,13 @@
     "untitled_project": "未命名项目",
     "untitled_description": "一个新的项目，已准备好开始编辑。"
   },
+  "home_intro": {
+    "badge": "Phaser 游戏开发平台",
+    "title": "在一个平台内完成 Phaser 项目的开发、管理与发布。",
+    "description": "SparkX 将项目管理、素材协作、版本化编辑与 AI 辅助能力整合到统一工作流中，帮助团队更高效地完成游戏制作。",
+    "open_projects": "进入项目列表",
+    "sign_in_start": "登录后开始"
+  },
   "project_intro": {
     "back_to_projects": "返回项目列表",
     "not_found_title": "未找到项目",

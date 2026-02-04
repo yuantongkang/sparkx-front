@@ -79,6 +79,13 @@
     "untitled_project": "Untitled Project",
     "untitled_description": "A new project ready to be edited."
   },
+  "home_intro": {
+    "badge": "Phaser Game Development Platform",
+    "title": "Build, manage, and ship Phaser projects in one place.",
+    "description": "SparkX brings together project management, asset collaboration, versioned editing, and AI-assisted workflows for modern game production.",
+    "open_projects": "Open project list",
+    "sign_in_start": "Sign in to start"
+  },
   "project_intro": {
     "back_to_projects": "Back to projects",
     "not_found_title": "Project not found",
