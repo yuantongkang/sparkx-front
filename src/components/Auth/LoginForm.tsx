@@ -61,6 +61,10 @@ type PasswordVisibilityState = {
   registerConfirm: boolean;
 };
 
+type LoginFormProps = {
+  initialMode?: Mode;
+};
+
 type FloatingInputProps = {
   id: string;
   name: string;
@@ -281,10 +285,10 @@ const loginWithSparkxApi = async (input: {
   }
 };
 
-export default function LoginForm() {
+export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
   const router = useRouter();
   const { t } = useI18n();
-  const [mode, setMode] = useState<Mode>("login");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [message, setMessage] = useState<Message | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [pending, startTransition] = useTransition();
