@@ -16,14 +16,19 @@ import {
 
 import LanguageSwitcher from "@/components/I18n/LanguageSwitcher";
 import { useI18n } from "@/i18n/client";
-import { authClient } from "@/lib/auth-client";
 import styles from "./LoginForm.module.css";
 
 type Mode = "login" | "register";
-type PendingAction = "login" | "register" | "google" | null;
+type PendingAction = "login" | "register" | null;
 type Message = {
   type: "error" | "success" | "info";
   text: string;
+};
+
+type SparkxLoginResult = {
+  userId: number;
+  created: boolean;
+  username?: string;
 };
 
 type Translator = ReturnType<typeof useI18n>["t"];
@@ -220,6 +225,57 @@ function MessageBanner({ message }: { message: Message | null }) {
   );
 }
 
+const parseApiErrorMessage = async (response: Response): Promise<string> => {
+  const text = await response.text();
+  if (!text) return "Request failed";
+  try {
+    const parsed = JSON.parse(text) as { message?: unknown; msg?: unknown };
+    if (typeof parsed.message === "string" && parsed.message.trim()) {
+      return parsed.message;
+    }
+    if (typeof parsed.msg === "string" && parsed.msg.trim()) {
+      return parsed.msg;
+    }
+  } catch {
+    // ignore parse failure and return plain text
+  }
+  const normalized = text.trim();
+  return normalized || "Request failed";
+};
+
+const loginWithSparkxApi = async (input: {
+  email: string;
+  password: string;
+  username?: string;
+}): Promise<{ ok: true; data: SparkxLoginResult } | { ok: false; message: string }> => {
+  try {
+    const response = await fetch("/api/sparkx/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(input),
+    });
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        message: await parseApiErrorMessage(response),
+      };
+    }
+
+    return {
+      ok: true,
+      data: (await response.json()) as SparkxLoginResult,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Request failed",
+    };
+  }
+};
+
 export default function LoginForm() {
   const router = useRouter();
   const { t } = useI18n();
@@ -248,7 +304,6 @@ export default function LoginForm() {
 
   const isLoginSubmitting = pending && pendingAction === "login";
   const isRegisterSubmitting = pending && pendingAction === "register";
-  const isGoogleSubmitting = pending && pendingAction === "google";
 
   const setLoginEmail = (value: string) => {
     setLoginForm((prev) => ({ ...prev, email: value }));
@@ -296,25 +351,7 @@ export default function LoginForm() {
   const handleGoogle = () => {
     setMessage({
       type: "info",
-      text: t("login.google_redirecting"),
-    });
-    setPendingAction("google");
-
-    startTransition(() => {
-      void (async () => {
-        const result = await authClient.signIn.social({
-          provider: "google",
-          callbackURL: REDIRECT_AFTER_AUTH,
-        });
-
-        if (result?.error) {
-          setMessage({
-            type: "error",
-            text: result.error.message ?? t("login.google_signin_failed"),
-          });
-          setPendingAction(null);
-        }
-      })();
+      text: t("login.apple_coming_soon"),
     });
   };
 
@@ -329,7 +366,9 @@ export default function LoginForm() {
     event.preventDefault();
     setMessage(null);
 
-    if (!loginForm.email.trim() || !loginForm.password) {
+    const normalizedEmail = loginForm.email.trim();
+
+    if (!normalizedEmail || !loginForm.password) {
       setMessage({
         type: "error",
         text: t("login.error_missing_email_password"),
@@ -340,26 +379,32 @@ export default function LoginForm() {
     setPendingAction("login");
     startTransition(() => {
       void (async () => {
-        const result = await authClient.signIn.email({
-          email: loginForm.email.trim(),
-          password: loginForm.password,
-          rememberMe: loginForm.rememberMe,
-          callbackURL: REDIRECT_AFTER_AUTH,
-        });
-
-        if (result?.error) {
+        const sparkxResult = await loginWithSparkxApi(
+          {
+            email: normalizedEmail,
+            password: loginForm.password,
+          },
+        );
+        if (!sparkxResult.ok) {
           setMessage({
             type: "error",
-            text: result.error.message ?? t("login.error_login_failed"),
+            text: sparkxResult.message || t("login.error_login_failed"),
           });
           setPendingAction(null);
           return;
         }
 
-        setMessage({
-          type: "success",
-          text: t("login.success_login_redirect"),
-        });
+        if (sparkxResult.data.created) {
+          setMessage({
+            type: "info",
+            text: t("login.success_account_created"),
+          });
+        } else {
+          setMessage({
+            type: "success",
+            text: t("login.success_login_redirect"),
+          });
+        }
         router.push(REDIRECT_AFTER_AUTH);
         router.refresh();
       })();
@@ -407,17 +452,26 @@ export default function LoginForm() {
       void (async () => {
         const normalizedRegisterEmail = registerForm.email.trim();
 
-        const result = await authClient.signUp.email({
-          name: registerForm.name.trim(),
-          email: normalizedRegisterEmail,
-          password: registerForm.password,
-          callbackURL: REDIRECT_AFTER_AUTH,
-        });
-
-        if (result?.error) {
+        const sparkxResult = await loginWithSparkxApi(
+          {
+            email: normalizedRegisterEmail,
+            password: registerForm.password,
+            username: registerForm.name.trim(),
+          },
+        );
+        if (!sparkxResult.ok) {
           setMessage({
             type: "error",
-            text: result.error.message ?? t("login.error_register_failed"),
+            text: sparkxResult.message || t("login.error_register_failed"),
+          });
+          setPendingAction(null);
+          return;
+        }
+
+        if (!sparkxResult.data.created) {
+          setMessage({
+            type: "error",
+            text: t("login.error_register_failed"),
           });
           setPendingAction(null);
           return;
@@ -514,34 +568,27 @@ export default function LoginForm() {
                     type="button"
                     onClick={handleGoogle}
                     disabled={pending}
-                    aria-busy={isGoogleSubmitting}
                     className={`${styles.socialBtn} flex cursor-pointer items-center justify-center space-x-2 rounded-xl bg-white py-2.5 disabled:cursor-not-allowed disabled:opacity-70`}
                   >
-                    {isGoogleSubmitting ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-gray-700 motion-reduce:animate-none" />
-                    ) : (
-                      <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
-                        <path
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                          fill="#4285F4"
-                        />
-                        <path
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                          fill="#34A853"
-                        />
-                        <path
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                          fill="#FBBC05"
-                        />
-                        <path
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                          fill="#EA4335"
-                        />
-                      </svg>
-                    )}
-                    <span className="text-sm font-medium text-gray-700">
-                      {isGoogleSubmitting ? t("login.google_redirecting_short") : "Google"}
-                    </span>
+                    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
+                      <path
+                        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                        fill="#4285F4"
+                      />
+                      <path
+                        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                        fill="#34A853"
+                      />
+                      <path
+                        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                        fill="#FBBC05"
+                      />
+                      <path
+                        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                        fill="#EA4335"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium text-gray-700">Google</span>
                   </button>
 
                   <button
@@ -561,13 +608,6 @@ export default function LoginForm() {
                     <span className="text-sm font-medium text-gray-700">Apple</span>
                   </button>
                 </div>
-
-                {isGoogleSubmitting && (
-                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                    <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" />
-                    <span>{t("login.google_redirecting")}</span>
-                  </div>
-                )}
 
                 <div className="relative flex items-center justify-center">
                   <div className="flex-1 border-t border-gray-200" />

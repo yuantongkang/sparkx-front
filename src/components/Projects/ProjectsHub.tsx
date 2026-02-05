@@ -5,18 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import { BookOpenText, Plus, Rocket, Trash2 } from "lucide-react";
 
 import { useI18n } from "@/i18n/client";
+import { type Project } from "@/lib/projects";
 import {
-  type Project,
   createProject,
-  createSeedProjects,
-  deleteProject,
-  ensureProjects,
-  writeProjects,
-} from "@/lib/projects";
-
-type ProjectsHubProps = {
-  userKey: string;
-};
+  deleteProjectById,
+  listProjects,
+} from "@/lib/projects-api";
 
 const pickFallbackCover = (index: number) => {
   const covers = [
@@ -30,13 +24,43 @@ const pickFallbackCover = (index: number) => {
   return covers[index % covers.length]!;
 };
 
-export default function ProjectsHub({ userKey }: ProjectsHubProps) {
+export default function ProjectsHub() {
   const { t } = useI18n();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setProjects(ensureProjects(userKey));
-  }, [userKey]);
+    let cancelled = false;
+
+    const loadProjects = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const loaded = await listProjects();
+        if (!cancelled) {
+          setProjects(loaded);
+        }
+      } catch (loadError) {
+        if (!cancelled) {
+          setError(
+            loadError instanceof Error ? loadError.message : t("projects.empty"),
+          );
+          setProjects([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void loadProjects();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [t]);
 
   const hydratedProjects = useMemo(
     () =>
@@ -47,23 +71,35 @@ export default function ProjectsHub({ userKey }: ProjectsHubProps) {
     [projects],
   );
 
-  const handleCreateProject = () => {
-    const project = createProject(userKey, {
-      name: t("projects.untitled_project"),
-      description: t("projects.untitled_description"),
-    });
-    setProjects((prev) => [project, ...prev]);
+  const handleCreateProject = async () => {
+    setError(null);
+    try {
+      const project = await createProject({
+        name: t("projects.untitled_project"),
+        description: t("projects.untitled_description"),
+      });
+      setProjects((prev) => [project, ...prev]);
+    } catch (createError) {
+      setError(
+        createError instanceof Error ? createError.message : t("projects.empty"),
+      );
+    }
   };
 
-  const handleDeleteProject = (projectId: string) => {
-    deleteProject(userKey, projectId);
-    setProjects((prev) => prev.filter((p) => p.id !== projectId));
+  const handleDeleteProject = async (projectId: string) => {
+    setError(null);
+    try {
+      await deleteProjectById(projectId);
+      setProjects((prev) => prev.filter((p) => p.id !== projectId));
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error ? deleteError.message : t("projects.empty"),
+      );
+    }
   };
 
-  const handleResetDemo = () => {
-    const seeded = createSeedProjects();
-    writeProjects(userKey, seeded);
-    setProjects(seeded);
+  const handleResetDemo = async () => {
+    await handleCreateProject();
   };
 
   return (
@@ -81,7 +117,9 @@ export default function ProjectsHub({ userKey }: ProjectsHubProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            onClick={handleCreateProject}
+            onClick={() => {
+              void handleCreateProject();
+            }}
             className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
           >
             <Plus className="h-4 w-4" />
@@ -90,12 +128,24 @@ export default function ProjectsHub({ userKey }: ProjectsHubProps) {
         </div>
       </div>
 
-      {hydratedProjects.length === 0 ? (
+      {error && (
+        <div className="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="mt-16 rounded-3xl border border-slate-200 bg-white p-10 text-center">
+          <p className="text-sm text-slate-600">{t("projects.empty")}</p>
+        </div>
+      ) : hydratedProjects.length === 0 ? (
         <div className="mt-16 rounded-3xl border border-dashed border-slate-200 bg-white p-10 text-center">
           <p className="text-sm text-slate-600">{t("projects.empty")}</p>
           <button
             type="button"
-            onClick={handleCreateProject}
+            onClick={() => {
+              void handleCreateProject();
+            }}
             className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
           >
             <Plus className="h-4 w-4" />
@@ -130,7 +180,9 @@ export default function ProjectsHub({ userKey }: ProjectsHubProps) {
 
                   <button
                     type="button"
-                    onClick={() => handleDeleteProject(project.id)}
+                    onClick={() => {
+                      void handleDeleteProject(project.id);
+                    }}
                     className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
                     aria-label={t("projects.delete")}
                   >
@@ -163,7 +215,9 @@ export default function ProjectsHub({ userKey }: ProjectsHubProps) {
       <div className="mt-10 flex items-center justify-center">
         <button
           type="button"
-          onClick={handleResetDemo}
+          onClick={() => {
+            void handleResetDemo();
+          }}
           className="text-xs font-medium text-slate-400 transition hover:text-slate-600"
         >
           {t("projects.reset_demo")}

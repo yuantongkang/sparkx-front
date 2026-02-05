@@ -4,10 +4,10 @@ import { redirect } from "next/navigation";
 import AuthControls from "@/components/Auth/AuthControls";
 import ProjectEditorHeader from "@/components/Projects/ProjectEditorHeader";
 import Workspace from "@/components/Workspace/Workspace";
-import { auth } from "@/lib/auth";
 import { getRequestLocale } from "@/i18n/server";
 import { getMessages } from "@/i18n/messages";
 import { createTranslator } from "@/i18n/translator";
+import { getSparkxSessionFromHeaders } from "@/lib/sparkx-session";
 
 export default async function ProjectEditorPage({
   params,
@@ -20,14 +20,13 @@ export default async function ProjectEditorPage({
   const locale = getRequestLocale();
   const t = createTranslator(getMessages(locale));
   const requestHeaders = await headers();
-  const session = await auth.api.getSession({ headers: requestHeaders });
+  const session = getSparkxSessionFromHeaders(requestHeaders);
 
   if (!session) {
     redirect("/login");
   }
 
-  const userLabel =
-    session.user.name ?? session.user.email ?? t("auth.signed_in");
+  const userLabel = session.username ?? session.email ?? t("auth.signed_in");
 
   const panelParam = searchParams?.panel;
   const initialLeftPanel =

@@ -6,14 +6,14 @@ import LanguageSwitcher from "@/components/I18n/LanguageSwitcher";
 import { getMessages } from "@/i18n/messages";
 import { getRequestLocale } from "@/i18n/server";
 import { createTranslator } from "@/i18n/translator";
-import { auth } from "@/lib/auth";
+import { getSparkxSessionFromHeaders } from "@/lib/sparkx-session";
 
 export default async function HomePage() {
   const locale = getRequestLocale();
   const t = createTranslator(getMessages(locale));
   const requestHeaders = await headers();
-  const session = await auth.api.getSession({ headers: requestHeaders });
-  const userLabel = session?.user.name ?? session?.user.email ?? t("auth.signed_in");
+  const session = getSparkxSessionFromHeaders(requestHeaders);
+  const userLabel = session?.username ?? session?.email ?? t("auth.signed_in");
 
   return (
     <main className="min-h-screen bg-slate-50">

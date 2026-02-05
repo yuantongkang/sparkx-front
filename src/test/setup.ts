@@ -11,12 +11,15 @@ if (
     url: "http://localhost/",
   });
 
-  // @ts-expect-error - attach jsdom globals
-  globalThis.window = dom.window;
-  // @ts-expect-error - attach jsdom globals
-  globalThis.document = dom.window.document;
-  // @ts-expect-error - attach jsdom globals
-  globalThis.navigator = dom.window.navigator;
+  const testGlobal = globalThis as typeof globalThis & {
+    window: Window & typeof globalThis;
+    document: Document;
+    navigator: Navigator;
+  };
+
+  testGlobal.window = dom.window as unknown as Window & typeof globalThis;
+  testGlobal.document = dom.window.document;
+  testGlobal.navigator = dom.window.navigator;
 }
 
 afterEach(() => {

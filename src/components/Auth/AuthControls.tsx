@@ -5,7 +5,6 @@ import { useTransition } from "react";
 
 import LanguageSwitcher from "@/components/I18n/LanguageSwitcher";
 import { useI18n } from "@/i18n/client";
-import { authClient } from "@/lib/auth-client";
 
 type AuthControlsProps = {
   label?: string;
@@ -31,7 +30,9 @@ export default function AuthControls({
 
   const handleSignOut = () => {
     startTransition(async () => {
-      await authClient.signOut();
+      await fetch("/api/sparkx/auth/logout", {
+        method: "POST",
+      });
       router.push("/login");
       router.refresh();
     });

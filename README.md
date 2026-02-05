@@ -29,84 +29,56 @@ bun run dev
 
 启动成功后，打开浏览器访问 [http://localhost:3000](http://localhost:3000) 即可看到项目运行效果。
 
-## 登录与认证（Better Auth）
+## 登录与认证（SparkX API）
 
-本项目使用 Better Auth，直接在 Next.js 内提供邮箱登录与 Google 登录。
+当前登录链路已切到你提供的后端 API（`47.112.97.49:6001`），不再依赖 Better Auth 的邮箱登录。
 
 ### 实现细节（代码级）
 
-**服务端配置**
+**登录代理路由**
 
-- 入口文件：`src/lib/auth.ts`
-- 数据库使用 MySQL（`mysql2` 驱动）
-- `betterAuth` 配置项：
-  - `secret`：`BETTER_AUTH_SECRET`
-  - `baseURL`：`BETTER_AUTH_URL`（可选，未设置时自动从请求头推断域名/协议）
-  - `database`：MySQL Pool
-  - `emailAndPassword.enabled = true`
-  - `socialProviders.google`：`GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`（两者都配置才启用）
+- `src/app/api/sparkx/auth/login/route.ts`
+- 前端提交邮箱/密码（注册页会额外带 `username`）
+- 服务端转发到：`POST /api/v1/auth/login`
+- 登录成功后会写入 HttpOnly 会话 Cookie（`sparkx_session`）
 
-**API 路由挂载**
+**退出登录路由**
 
-- 路由文件：`src/app/api/auth/[...all]/route.ts`
-- 使用 `toNextJsHandler(auth)` 暴露 `GET` / `POST`
-- 显式设置 `runtime = "nodejs"`，确保数据库驱动可用
-- OAuth 回调路径固定为：`/api/auth/callback/google`
+- `src/app/api/sparkx/auth/logout/route.ts`
+- 清理 `sparkx_session` Cookie
 
-**页面层鉴权**
+**会话校验**
 
-- 登录页：`src/app/login/page.tsx`
-  - `auth.api.getSession({ headers })` 判断是否已登录
-  - 已登录直接 `redirect("/")`
-- 首页：`src/app/page.tsx`
-  - 同样通过 `auth.api.getSession` 校验
-  - 未登录 `redirect("/login")`
-  - 已登录展示 `AuthControls`（右上角退出）
+- `src/lib/sparkx-session.ts`
+- 通过 HMAC 签名 Cookie（防篡改）
+- 页面与 API 路由统一用 `getSparkxSessionFromHeaders(...)` 判定登录态
+- 已切换页面：
+  - `src/app/login/page.tsx`
+  - `src/app/page.tsx`
+  - `src/app/projects/page.tsx`
+  - `src/app/projects/[projectId]/page.tsx`
+  - `src/app/projects/[projectId]/edit/page.tsx`
 
-**客户端登录逻辑**
+**前端登录/退出组件**
 
-- 客户端入口：`src/lib/auth-client.ts`（`createAuthClient()`）
-- 组件：`src/components/Auth/LoginForm.tsx`
-  - 邮箱登录：`authClient.signIn.email({ email, password })`
-  - 邮箱注册：`authClient.signUp.email({ name, email, password })`
-  - Google 登录：`authClient.signIn.social({ provider: "google" })`
-- 退出登录：`src/components/Auth/AuthControls.tsx`
-  - `authClient.signOut()` 后跳转 `/login`
+- 登录：`src/components/Auth/LoginForm.tsx`
+  - 登录与注册都走 `/api/sparkx/auth/login`
+- 退出：`src/components/Auth/AuthControls.tsx`
+  - 调用 `/api/sparkx/auth/logout`
 
 ### 1. 环境变量
 
 复制 `.env.example` 为 `.env.local`（或 `.env`），并补齐以下变量：
 
 ```bash
-BETTER_AUTH_SECRET=replace-with-a-strong-random-secret
-BETTER_AUTH_URL=http://localhost:3000
-DATABASE_URL=mysql://USER:PASSWORD@127.0.0.1:3306/DB_NAME
-GOOGLE_CLIENT_ID=
-GOOGLE_CLIENT_SECRET=
+SPARKX_API_BASE_URL=http://47.112.97.49:6001
+SPARKX_SESSION_SECRET=replace-with-a-strong-random-secret
+SPARKX_SESSION_MAX_AGE=2592000
 ```
 
-> `BETTER_AUTH_URL` 可选：  
-> - 支持完整 URL：`https://your-domain.com`  
-> - 也支持仅域名：`your-domain.com`（会自动补协议）  
-> - 不配置时会根据请求头自动推断（适合 Vercel / 反向代理场景）
-> 若不需要 Google 登录，可不填 `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET`。
-
-### 2. 初始化数据库表
-
-首次运行需要初始化 Better Auth 的数据库表（MySQL）：
-
-```bash
-bun run auth:init:mysql
-```
-
-如果出现 `Table 'xxx.verification' doesn't exist` 之类错误，说明数据库表还未初始化，请先执行上面的初始化命令再登录。
-
-### 3. Google OAuth 回调地址
-
-在 Google Cloud Console 的 OAuth Client 中添加以下回调地址：
-
-- 本地：`http://localhost:3000/api/auth/callback/google`
-- 生产：`https://your-domain.com/api/auth/callback/google`
+> `SPARKX_API_BASE_URL`：外部业务 API 地址（支持 `http://` 或 `https://`）。
+> `SPARKX_SESSION_SECRET`：用于签名会话 Cookie，生产环境务必配置高强度随机值。
+> `SPARKX_SESSION_MAX_AGE`：会话有效期（秒），默认 30 天。
 
 ## 构建生产版本
 

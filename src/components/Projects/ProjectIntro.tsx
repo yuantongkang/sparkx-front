@@ -5,21 +5,37 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, BookOpenText, Rocket } from "lucide-react";
 
 import { useI18n } from "@/i18n/client";
-import { type Project, ensureProjects } from "@/lib/projects";
+import { type Project } from "@/lib/projects";
+import { getProjectById } from "@/lib/projects-api";
 
 type ProjectIntroProps = {
-  userKey: string;
   projectId: string;
 };
 
-export default function ProjectIntro({ userKey, projectId }: ProjectIntroProps) {
+export default function ProjectIntro({ projectId }: ProjectIntroProps) {
   const { t } = useI18n();
   const [project, setProject] = useState<Project | null>(null);
 
   useEffect(() => {
-    const projects = ensureProjects(userKey);
-    setProject(projects.find((p) => p.id === projectId) ?? null);
-  }, [projectId, userKey]);
+    let cancelled = false;
+    const loadProject = async () => {
+      try {
+        const detail = await getProjectById(projectId);
+        if (!cancelled) {
+          setProject(detail);
+        }
+      } catch {
+        if (!cancelled) {
+          setProject(null);
+        }
+      }
+    };
+
+    void loadProject();
+    return () => {
+      cancelled = true;
+    };
+  }, [projectId]);
 
   const createdAtLabel = useMemo(() => {
     if (!project?.createdAt) return null;

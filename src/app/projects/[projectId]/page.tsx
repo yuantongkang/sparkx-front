@@ -3,10 +3,10 @@ import { redirect } from "next/navigation";
 
 import AuthControls from "@/components/Auth/AuthControls";
 import ProjectIntro from "@/components/Projects/ProjectIntro";
-import { auth } from "@/lib/auth";
 import { getRequestLocale } from "@/i18n/server";
 import { getMessages } from "@/i18n/messages";
 import { createTranslator } from "@/i18n/translator";
+import { getSparkxSessionFromHeaders } from "@/lib/sparkx-session";
 
 export default async function ProjectIntroPage({
   params,
@@ -17,15 +17,13 @@ export default async function ProjectIntroPage({
   const locale = getRequestLocale();
   const t = createTranslator(getMessages(locale));
   const requestHeaders = await headers();
-  const session = await auth.api.getSession({ headers: requestHeaders });
+  const session = getSparkxSessionFromHeaders(requestHeaders);
 
   if (!session) {
     redirect("/login");
   }
 
-  const userLabel =
-    session.user.name ?? session.user.email ?? t("auth.signed_in");
-  const userKey = session.user.id ?? session.user.email ?? "unknown";
+  const userLabel = session.username ?? session.email ?? t("auth.signed_in");
 
   return (
     <main className="min-h-screen bg-slate-50">
@@ -34,7 +32,7 @@ export default async function ProjectIntroPage({
           <AuthControls label={userLabel} />
         </div>
       </header>
-      <ProjectIntro userKey={userKey} projectId={projectId} />
+      <ProjectIntro projectId={projectId} />
     </main>
   );
 }
