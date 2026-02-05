@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { BookOpenText, Plus, Rocket, Trash2 } from "lucide-react";
 
+import CreateProjectDialog from "@/components/Projects/CreateProjectDialog";
 import { useI18n } from "@/i18n/client";
 import { type Project } from "@/lib/projects";
 import {
@@ -27,6 +28,8 @@ const pickFallbackCover = (index: number) => {
 export default function ProjectsHub() {
   const { t } = useI18n();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,18 +74,31 @@ export default function ProjectsHub() {
     [projects],
   );
 
-  const handleCreateProject = async () => {
+  const handleCreateProject = async (input?: {
+    name?: string;
+    coverImage?: string;
+  }) => {
     setError(null);
+    setIsCreatingProject(true);
     try {
       const project = await createProject({
-        name: t("projects.untitled_project"),
+        name: input?.name || t("projects.untitled_project"),
         description: t("projects.untitled_description"),
       });
-      setProjects((prev) => [project, ...prev]);
+      setProjects((prev) => [
+        {
+          ...project,
+          coverImage: input?.coverImage || project.coverImage,
+        },
+        ...prev,
+      ]);
+      setIsCreateDialogOpen(false);
     } catch (createError) {
       setError(
         createError instanceof Error ? createError.message : t("projects.empty"),
       );
+    } finally {
+      setIsCreatingProject(false);
     }
   };
 
@@ -118,7 +134,7 @@ export default function ProjectsHub() {
           <button
             type="button"
             onClick={() => {
-              void handleCreateProject();
+              setIsCreateDialogOpen(true);
             }}
             className="inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
           >
@@ -144,7 +160,7 @@ export default function ProjectsHub() {
           <button
             type="button"
             onClick={() => {
-              void handleCreateProject();
+              setIsCreateDialogOpen(true);
             }}
             className="mt-5 inline-flex items-center gap-2 rounded-full bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800"
           >
@@ -223,6 +239,15 @@ export default function ProjectsHub() {
           {t("projects.reset_demo")}
         </button>
       </div>
+
+      <CreateProjectDialog
+        isOpen={isCreateDialogOpen}
+        isSubmitting={isCreatingProject}
+        onCancel={() => {
+          setIsCreateDialogOpen(false);
+        }}
+        onSubmit={(input) => handleCreateProject(input)}
+      />
     </div>
   );
 }

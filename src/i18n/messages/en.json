@@ -77,7 +77,25 @@
     "delete": "Delete project",
     "reset_demo": "Reset demo project",
     "untitled_project": "Untitled Project",
-    "untitled_description": "A new project ready to be edited."
+    "untitled_description": "A new project ready to be edited.",
+    "create_dialog": {
+      "title": "Create New Project",
+      "subtitle": "Begin your creative journey and shape unlimited game ideas",
+      "cover_label": "Project cover",
+      "cover_recommend_size": "(Recommended 1200x630)",
+      "cover_upload_hint": "Click or drag to upload cover",
+      "cover_supported": "Supports JPG, PNG, WebP",
+      "cover_click_upload": "Choose an image",
+      "cover_preview": "Project cover preview",
+      "cover_change": "Click to change cover",
+      "cover_invalid": "Please upload a JPG, PNG, or WebP image.",
+      "name_label": "Project name",
+      "name_placeholder": "Give your project a memorable name...",
+      "name_required": "Please enter a project name.",
+      "cancel": "Cancel",
+      "create": "Create Project",
+      "creating": "Creating..."
+    }
   },
   "home_intro": {
     "badge": "Phaser Game Development Platform",

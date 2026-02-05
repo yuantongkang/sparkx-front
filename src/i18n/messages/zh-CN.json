@@ -77,7 +77,25 @@
     "delete": "删除项目",
     "reset_demo": "重置演示项目",
     "untitled_project": "未命名项目",
-    "untitled_description": "一个新的项目，已准备好开始编辑。"
+    "untitled_description": "一个新的项目，已准备好开始编辑。",
+    "create_dialog": {
+      "title": "创建新项目",
+      "subtitle": "开启你的创意之旅，定义游戏的无限可能",
+      "cover_label": "项目封面",
+      "cover_recommend_size": "(推荐尺寸 1200x630)",
+      "cover_upload_hint": "点击或拖拽上传封面",
+      "cover_supported": "支持 JPG、PNG、WebP 格式",
+      "cover_click_upload": "点击选择图片",
+      "cover_preview": "项目封面预览",
+      "cover_change": "点击更换封面",
+      "cover_invalid": "请上传 JPG、PNG 或 WebP 格式图片。",
+      "name_label": "项目名称",
+      "name_placeholder": "给你的项目起一个响亮的名字...",
+      "name_required": "请输入项目名称。",
+      "cancel": "取消",
+      "create": "创建项目",
+      "creating": "创建中..."
+    }
   },
   "home_intro": {
     "badge": "Phaser 游戏开发平台",
