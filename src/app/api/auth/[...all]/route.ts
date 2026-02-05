@@ -1,7 +1,14 @@
-import { toNextJsHandler } from "better-auth/next-js";
-
-import { auth } from "@/lib/auth";
+import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
-export const { GET, POST } = toNextJsHandler(auth);
+const deprecated = () =>
+  NextResponse.json(
+    {
+      message: "Deprecated auth endpoint. Use /api/sparkx/auth/login instead.",
+    },
+    { status: 410 },
+  );
+
+export const GET = deprecated;
+export const POST = deprecated;

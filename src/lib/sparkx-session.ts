@@ -15,12 +15,9 @@ const SESSION_COOKIE_NAME = "sparkx_session";
 const DEFAULT_SESSION_MAX_AGE = 60 * 60 * 24 * 30;
 
 const getSessionSecret = (): string => {
-  const secret =
-    process.env.SPARKX_SESSION_SECRET ?? process.env.BETTER_AUTH_SECRET;
+  const secret = process.env.SPARKX_SESSION_SECRET;
   if (!secret) {
-    throw new Error(
-      "Missing session secret. Set SPARKX_SESSION_SECRET or BETTER_AUTH_SECRET.",
-    );
+    throw new Error("Missing session secret. Set SPARKX_SESSION_SECRET.");
   }
   return secret;
 };
