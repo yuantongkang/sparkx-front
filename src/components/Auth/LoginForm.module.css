@@ -1,37 +1,50 @@
 .gradientBg {
   background:
-    radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(255, 119, 48, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 40% 20%, rgba(255, 206, 84, 0.1) 0%, transparent 40%),
-    #0a0a0a;
+    radial-gradient(circle at 50% -10%, rgba(255, 164, 53, 0.16), transparent 40%),
+    radial-gradient(circle at 10% 90%, rgba(101, 121, 255, 0.12), transparent 42%),
+    radial-gradient(circle at 90% 90%, rgba(255, 145, 77, 0.12), transparent 40%),
+    #090c14;
 }
 
 .glassCard {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #ffffff;
+  border: 1px solid rgba(225, 232, 244, 0.8);
+  box-shadow: 0 36px 90px -48px rgba(0, 0, 0, 0.75);
 }
 
 .btnGradient {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #151920 0%, #2d3238 100%);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .btnGradient:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 40px -10px rgba(255, 119, 48, 0.3);
+  box-shadow: 0 16px 30px -20px rgba(0, 0, 0, 0.9);
 }
 
 .socialBtn {
-  transition: all 0.2s ease;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  border: 1px solid #e2e8f3;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75);
 }
 
 .socialBtn:hover {
-  background: rgba(0, 0, 0, 0.02);
-  border-color: rgba(0, 0, 0, 0.2);
-  transform: translateY(-1px);
+  border-color: #d2dced;
+  box-shadow: 0 10px 20px -18px rgba(15, 23, 42, 0.4);
+}
+
+.socialGoogleOverlay {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.socialGoogleOverlay :global(div) {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
 }
 
 .particle {

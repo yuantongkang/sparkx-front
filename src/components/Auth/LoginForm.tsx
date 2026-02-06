@@ -163,7 +163,7 @@ function FloatingInput({
 }: FloatingInputProps) {
   return (
     <div className="space-y-2">
-      <Label htmlFor={id} className="text-sm font-medium text-orange-500">
+      <Label htmlFor={id} className="text-sm font-semibold text-orange-500">
         {label}
       </Label>
       <div className="relative">
@@ -176,7 +176,7 @@ function FloatingInput({
           disabled={disabled}
           required={required}
           autoComplete={autoComplete}
-          className={`h-14 rounded-2xl border-slate-200 bg-white px-4 text-base text-slate-900 placeholder:text-slate-400 focus-visible:ring-orange-500 disabled:bg-gray-100 ${inputClassName ?? ""}`}
+          className={`h-14 rounded-2xl border border-[#dbe8ff] bg-white px-4 text-base text-slate-900 placeholder:text-slate-400 focus-visible:border-[#c8d8f8] focus-visible:ring-2 focus-visible:ring-[#dbe8ff] disabled:bg-gray-100 ${inputClassName ?? ""}`}
         />
         {rightSlot}
       </div>
@@ -606,7 +606,7 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
         <LanguageSwitcher />
       </div>
 
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-[460px]">
         <div className="mb-8 flex items-center justify-center space-x-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-orange-500 to-yellow-400">
             <Zap className="h-5 w-5 text-white" />
@@ -623,25 +623,25 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
           <Tabs
             value={mode}
             onValueChange={(nextMode) => handleModeChange(nextMode as Mode)}
-            className="border-b border-gray-100"
+            className="border-b border-[#edf2fa]"
           >
             <TabsList className="grid h-auto w-full grid-cols-2 rounded-none bg-transparent p-0">
               <TabsTrigger
                 value="login"
-                className="rounded-none border-b-2 border-transparent py-4 text-sm font-medium text-slate-400 data-[state=active]:border-orange-400 data-[state=active]:bg-transparent data-[state=active]:text-slate-900 data-[state=active]:shadow-none"
+                className="rounded-none border-b-2 border-transparent py-4 text-sm font-semibold text-slate-300 data-[state=active]:border-orange-400 data-[state=active]:bg-transparent data-[state=active]:text-slate-900 data-[state=active]:shadow-none"
               >
                 {t("login.tab_login")}
               </TabsTrigger>
               <TabsTrigger
                 value="register"
-                className="rounded-none border-b-2 border-transparent py-4 text-sm font-medium text-slate-400 data-[state=active]:border-orange-400 data-[state=active]:bg-transparent data-[state=active]:text-slate-900 data-[state=active]:shadow-none"
+                className="rounded-none border-b-2 border-transparent py-4 text-sm font-semibold text-slate-300 data-[state=active]:border-orange-400 data-[state=active]:bg-transparent data-[state=active]:text-slate-900 data-[state=active]:shadow-none"
               >
                 {t("login.tab_register")}
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
-          <div className="min-h-[620px] space-y-6 p-8">
+          <div className="min-h-[650px] space-y-6 px-8 pb-9 pt-8">
             {mode === "login" ? (
               <form className="space-y-5" onSubmit={handleLogin}>
                 <div className="mb-6 text-center">
@@ -653,26 +653,32 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div
-                    className={`${styles.socialBtn} flex items-center justify-center rounded-xl bg-white py-2.5 ${
+                    className={`${styles.socialBtn} relative flex h-10 items-center justify-center overflow-hidden rounded-xl bg-white text-sm font-semibold text-slate-700 ${
                       pending ? "pointer-events-none opacity-70" : ""
                     }`}
                   >
                     {googleLoginEnabled ? (
-                      <GoogleLogin
-                        onSuccess={(credentialResponse: CredentialResponse) =>
-                          handleGoogleSuccess(credentialResponse.credential)
-                        }
-                        onError={handleGoogleError}
-                        theme="outline"
-                        size="large"
-                        shape="pill"
-                        width={220}
-                      />
+                      <>
+                        <span>Google</span>
+                        <div className={styles.socialGoogleOverlay}>
+                          <GoogleLogin
+                            onSuccess={(credentialResponse: CredentialResponse) =>
+                              handleGoogleSuccess(credentialResponse.credential)
+                            }
+                            onError={handleGoogleError}
+                            theme="outline"
+                            size="large"
+                            shape="rectangular"
+                            text="continue_with"
+                            width={210}
+                          />
+                        </div>
+                      </>
                     ) : (
                       <button
                         type="button"
                         onClick={handleGoogleUnavailable}
-                        className="text-sm font-medium text-gray-700"
+                        className="w-full text-sm font-semibold text-slate-700"
                       >
                         Google
                       </button>
@@ -683,26 +689,26 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
                     type="button"
                     onClick={handleApple}
                     disabled={pending}
-                    className={`${styles.socialBtn} flex cursor-pointer items-center justify-center space-x-2 rounded-xl bg-white py-2.5 disabled:cursor-not-allowed disabled:opacity-70`}
+                    className={`${styles.socialBtn} flex h-10 cursor-pointer items-center justify-center space-x-2 rounded-xl bg-white text-sm font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-70`}
                   >
                     <svg
-                      className="h-5 w-5"
+                      className="h-4 w-4"
                       viewBox="0 0 24 24"
                       fill="black"
                       aria-hidden="true"
                     >
                       <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.53 4.08zm-5.85-15.1c.07-2.04 1.76-3.89 3.75-4.12.29 2.32-2.07 4.46-3.75 4.12z" />
                     </svg>
-                    <span className="text-sm font-medium text-gray-700">Apple</span>
+                    <span>Apple</span>
                   </button>
                 </div>
 
                 <div className="relative flex items-center justify-center">
-                  <div className="flex-1 border-t border-gray-200" />
-                  <span className="bg-transparent px-3 text-xs text-gray-400">
+                  <div className="flex-1 border-t border-[#edf2fa]" />
+                  <span className="bg-transparent px-3 text-xs text-[#a6b0c4]">
                     {t("login.or_email")}
                   </span>
-                  <div className="flex-1 border-t border-gray-200" />
+                  <div className="flex-1 border-t border-[#edf2fa]" />
                 </div>
 
                 <FloatingInput
@@ -741,11 +747,11 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
                           rememberMe: checked === true,
                         }))
                       }
-                      className="h-4 w-4 rounded border-slate-300 data-[state=checked]:border-orange-500 data-[state=checked]:bg-orange-500"
+                      className="h-4 w-4 rounded border-[#dbe8ff] data-[state=checked]:border-orange-500 data-[state=checked]:bg-orange-500"
                     />
                     <Label
                       htmlFor="remember-me"
-                      className="cursor-pointer text-sm text-gray-600 transition-colors hover:text-gray-800"
+                      className="cursor-pointer text-sm font-medium text-[#5f6d87] transition-colors hover:text-[#3e4a62]"
                     >
                       {t("login.remember_me")}
                     </Label>
@@ -758,7 +764,7 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
                         text: t("login.forgot_password_coming_soon"),
                       })
                     }
-                    className="cursor-pointer font-medium text-orange-600 transition-colors hover:text-orange-700"
+                    className="cursor-pointer text-base font-semibold text-orange-500 transition-colors hover:text-orange-600 sm:text-sm"
                   >
                     {t("login.forgot_password")}
                   </button>
@@ -767,7 +773,7 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
                 <button
                   type="submit"
                   disabled={pending}
-                  className={`${styles.btnGradient} flex w-full cursor-pointer items-center justify-center space-x-2 rounded-xl py-3.5 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70`}
+                  className={`${styles.btnGradient} flex h-12 w-full cursor-pointer items-center justify-center space-x-2 rounded-xl px-4 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70`}
                 >
                   {isLoginSubmitting ? (
                     <>
@@ -923,15 +929,21 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
               <MessageBanner message={message} />
             </div>
 
-            <div className="border-t border-gray-100 pt-2 text-center">
-              <p className="text-xs text-gray-400">
+            <div className="pt-10 text-center">
+              <p className="text-sm font-medium text-[#b4bfd1]">
                 {t("login.recaptcha_protected")}
                 <br />
-                <button type="button" className="cursor-pointer hover:text-gray-600">
+                <button
+                  type="button"
+                  className="cursor-pointer font-semibold text-[#a6b2c8] hover:text-[#7f8ea8]"
+                >
                   {t("login.privacy_policy")}
                 </button>
                 {t("login.and")}
-                <button type="button" className="cursor-pointer hover:text-gray-600">
+                <button
+                  type="button"
+                  className="cursor-pointer font-semibold text-[#a6b2c8] hover:text-[#7f8ea8]"
+                >
                   {t("login.terms_of_service")}
                 </button>
               </p>
@@ -942,7 +954,7 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
         <div className="mt-6 text-center">
           <Link
             href="/"
-            className="inline-flex items-center space-x-2 text-sm text-gray-400 transition-colors hover:text-white"
+            className="inline-flex items-center space-x-2 text-sm text-[#a4b4cc] transition-colors hover:text-[#d1daea]"
           >
             <ArrowLeft className="h-4 w-4" />
             <span>{t("login.back_home")}</span>
