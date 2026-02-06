@@ -659,7 +659,27 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
                   >
                     {googleLoginEnabled ? (
                       <>
-                        <span>Google</span>
+                        <span className="flex items-center gap-2">
+                          <svg className="h-4 w-4" viewBox="0 0 18 18" aria-hidden="true">
+                            <path
+                              fill="#EA4335"
+                              d="M9 7.364v3.555h4.943c-.218 1.144-.87 2.113-1.853 2.764l2.994 2.324c1.746-1.607 2.752-3.974 2.752-6.79 0-.66-.06-1.296-.17-1.853H9z"
+                            />
+                            <path
+                              fill="#34A853"
+                              d="M9 18c2.484 0 4.568-.824 6.09-2.24l-2.994-2.324c-.824.553-1.877.883-3.096.883-2.378 0-4.39-1.605-5.107-3.766H.8v2.397A8.999 8.999 0 009 18z"
+                            />
+                            <path
+                              fill="#4A90E2"
+                              d="M3.893 10.553A5.41 5.41 0 013.607 9c0-.54.1-1.065.286-1.553V5.05H.8A8.999 8.999 0 000 9c0 1.454.348 2.83.8 3.95l3.093-2.397z"
+                            />
+                            <path
+                              fill="#FBBC05"
+                              d="M9 3.58c1.35 0 2.56.465 3.515 1.378l2.635-2.635C13.566.84 11.482 0 9 0A8.999 8.999 0 00.8 5.05l3.093 2.397C4.61 5.186 6.622 3.58 9 3.58z"
+                            />
+                          </svg>
+                          <span>Google</span>
+                        </span>
                         <div className={styles.socialGoogleOverlay}>
                           <GoogleLogin
                             onSuccess={(credentialResponse: CredentialResponse) =>
@@ -678,9 +698,27 @@ export default function LoginForm({ initialMode = "login" }: LoginFormProps) {
                       <button
                         type="button"
                         onClick={handleGoogleUnavailable}
-                        className="w-full text-sm font-semibold text-slate-700"
+                        className="flex w-full items-center justify-center gap-2 text-sm font-semibold text-slate-700"
                       >
-                        Google
+                        <svg className="h-4 w-4" viewBox="0 0 18 18" aria-hidden="true">
+                          <path
+                            fill="#EA4335"
+                            d="M9 7.364v3.555h4.943c-.218 1.144-.87 2.113-1.853 2.764l2.994 2.324c1.746-1.607 2.752-3.974 2.752-6.79 0-.66-.06-1.296-.17-1.853H9z"
+                          />
+                          <path
+                            fill="#34A853"
+                            d="M9 18c2.484 0 4.568-.824 6.09-2.24l-2.994-2.324c-.824.553-1.877.883-3.096.883-2.378 0-4.39-1.605-5.107-3.766H.8v2.397A8.999 8.999 0 009 18z"
+                          />
+                          <path
+                            fill="#4A90E2"
+                            d="M3.893 10.553A5.41 5.41 0 013.607 9c0-.54.1-1.065.286-1.553V5.05H.8A8.999 8.999 0 000 9c0 1.454.348 2.83.8 3.95l3.093-2.397z"
+                          />
+                          <path
+                            fill="#FBBC05"
+                            d="M9 3.58c1.35 0 2.56.465 3.515 1.378l2.635-2.635C13.566.84 11.482 0 9 0A8.999 8.999 0 00.8 5.05l3.093 2.397C4.61 5.186 6.622 3.58 9 3.58z"
+                          />
+                        </svg>
+                        <span>Google</span>
                       </button>
                     )}
                   </div>

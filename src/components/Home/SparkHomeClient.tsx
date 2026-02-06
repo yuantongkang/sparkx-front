@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowRight,
@@ -9,11 +9,8 @@ import {
   PlayCircle,
   Users,
   Wand2,
-  X,
   Zap,
 } from "lucide-react";
-
-type ModalType = "login" | "register" | null;
 
 type Particle = {
   x: number;
@@ -52,15 +49,6 @@ type SparkHomeClientProps = {
 export default function SparkHomeClient({ isAuthenticated }: SparkHomeClientProps) {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [modalType, setModalType] = useState<ModalType>(null);
-
-  const openModal = useCallback((type: Exclude<ModalType, null>) => {
-    setModalType(type);
-  }, []);
-
-  const closeModal = useCallback(() => {
-    setModalType(null);
-  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -208,60 +196,26 @@ export default function SparkHomeClient({ isAuthenticated }: SparkHomeClientProp
     };
   }, []);
 
-  useEffect(() => {
-    if (!modalType) {
-      return;
-    }
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        closeModal();
-      }
-    };
-
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [closeModal, modalType]);
-
-  useEffect(() => {
-    document.body.style.overflow = modalType ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [modalType]);
-
   const handleLoginClick = useCallback(() => {
     if (isAuthenticated) {
       router.push("/projects");
       return;
     }
-    openModal("login");
-  }, [isAuthenticated, openModal, router]);
+    router.push("/login");
+  }, [isAuthenticated, router]);
 
   const handleStartCreateClick = useCallback(() => {
     if (isAuthenticated) {
       router.push("/projects");
       return;
     }
-    openModal("register");
-  }, [isAuthenticated, openModal, router]);
+    router.push("/login?mode=register");
+  }, [isAuthenticated, router]);
 
   const handleShowDemo = useCallback(() => {
     const target = document.querySelector("#games");
     target?.scrollIntoView({ behavior: "smooth" });
   }, []);
-
-  const handleAuthSubmit = useCallback(
-    (event: FormEvent<HTMLFormElement>) => {
-      event.preventDefault();
-      const target = modalType === "register" ? "/login?mode=register" : "/login";
-      closeModal();
-      router.push(target);
-    },
-    [closeModal, modalType, router],
-  );
 
   return (
     <>
@@ -449,54 +403,6 @@ export default function SparkHomeClient({ isAuthenticated }: SparkHomeClientProp
           </div>
         </footer>
 
-        <div className={`fixed inset-0 z-[100] ${modalType ? "" : "hidden"}`}>
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={closeModal} />
-          <div className="relative flex min-h-screen items-center justify-center p-4">
-            <div
-              role="dialog"
-              aria-modal="true"
-              className="animate-float relative w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl"
-              style={{ animationDuration: "0.5s" }}
-            >
-              <button
-                type="button"
-                onClick={closeModal}
-                className="absolute right-4 top-4 text-gray-400 transition-colors hover:text-gray-600"
-              >
-                <X className="h-6 w-6" />
-              </button>
-              <div className="mb-6 text-center">
-                <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-yellow-400">
-                  <Zap className="h-7 w-7 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900">
-                  {modalType === "register" ? "加入 SparkX" : "欢迎回来"}
-                </h3>
-                <p className="mt-1 text-sm text-gray-500">
-                  {modalType === "register" ? "注册以开启您的创作之旅" : "登录以继续您的创作之旅"}
-                </p>
-              </div>
-              <form className="space-y-4" onSubmit={handleAuthSubmit}>
-                <input
-                  type="email"
-                  placeholder="电子邮箱"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 caret-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-                />
-                <input
-                  type="password"
-                  placeholder="密码"
-                  className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 caret-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-200"
-                />
-                <button
-                  type="submit"
-                  className="w-full rounded-xl bg-gray-900 py-3 font-semibold text-white transition-colors hover:bg-gray-800"
-                >
-                  继续
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
       </main>
 
       <style jsx global>{`
