@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
-import { useI18n } from '@/i18n/client';
+import React, { useEffect, useState } from "react";
+import { X } from "lucide-react";
+
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { useI18n } from "@/i18n/client";
 
 interface CornerPanelProps {
   cornerRadius: number;
@@ -10,12 +13,14 @@ interface CornerPanelProps {
   onClose: () => void;
 }
 
-export const CornerPanel = ({ 
-  cornerRadius, 
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+export const CornerPanel = ({
+  cornerRadius,
   sides,
   starInnerRadius,
-  onUpdate, 
-  onClose 
+  onUpdate,
+  onClose,
 }: CornerPanelProps) => {
   const { t } = useI18n();
   const [value, setValue] = useState(cornerRadius);
@@ -38,107 +43,117 @@ export const CornerPanel = ({
     }
   }, [starInnerRadius]);
 
-  const handleChange = (newValue: number) => {
-    setValue(newValue);
-    onUpdate({ cornerRadius: newValue });
+  const handleCornerRadiusChange = (next: number) => {
+    const normalized = clamp(next, 0, 200);
+    setValue(normalized);
+    onUpdate({ cornerRadius: normalized });
   };
 
-  const handleSidesChange = (newValue: number) => {
-    setSidesValue(newValue);
-    onUpdate({ sides: newValue });
+  const handleSidesChange = (next: number) => {
+    const normalized = clamp(next, 3, 60);
+    setSidesValue(normalized);
+    onUpdate({ sides: normalized });
   };
 
-  const handleInnerRadiusChange = (newValue: number) => {
-    setInnerRadiusValue(newValue);
-    onUpdate({ starInnerRadius: newValue });
+  const handleInnerRadiusChange = (next: number) => {
+    const normalized = clamp(next, 0, 100);
+    setInnerRadiusValue(normalized);
+    onUpdate({ starInnerRadius: normalized });
   };
 
   return (
-    <div 
-      className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 w-[280px] p-4 z-50"
-      onMouseDown={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
+    <div
+      className="absolute top-full left-0 mt-2 w-[300px] rounded-xl border border-gray-100 bg-white p-4 shadow-xl z-50"
+      onMouseDown={(event) => event.stopPropagation()}
+      onTouchStart={(event) => event.stopPropagation()}
     >
-      <div className="flex items-center justify-between mb-4">
-        <span className="font-medium text-gray-700">{t('editor.properties')}</span>
-        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="font-medium text-gray-700">{t("editor.properties")}</span>
+        <button onClick={onClose} className="text-gray-400 transition-colors hover:text-gray-600">
           <X size={16} />
         </button>
       </div>
 
-      {/* Corner Radius Slider */}
-      <div className="flex items-center gap-3 mb-4">
-        <span className="text-sm text-gray-500 whitespace-nowrap w-16">{t('editor.corner_radius')}</span>
-        <input 
-          type="range" 
-          min="0" 
-          max="200" 
-          value={value} 
-          onChange={(e) => handleChange(parseInt(e.target.value) || 0)}
-          className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-        />
-        <div className="w-12 flex items-center bg-gray-50 border border-gray-200 rounded-md px-1 h-8">
-           <input 
-             type="number" 
-             value={value}
-             onChange={(e) => handleChange(parseInt(e.target.value) || 0)}
-             className="w-full bg-transparent outline-none text-sm text-center"
-             min="0"
-             max="200"
-           />
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm text-gray-500">
+            <span>{t("editor.corner_radius")}</span>
+            <span>{value}</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Slider
+              min={0}
+              max={200}
+              step={1}
+              value={[value]}
+              onValueChange={([next]) => handleCornerRadiusChange(next ?? 0)}
+              className="flex-1"
+            />
+            <Input
+              type="number"
+              min={0}
+              max={200}
+              value={value}
+              onChange={(event) => handleCornerRadiusChange(parseInt(event.target.value, 10) || 0)}
+              className="h-8 w-16 px-2 text-center"
+            />
+          </div>
         </div>
+
+        {sides !== undefined && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <span>{t("editor.sides")}</span>
+              <span>{sidesValue}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Slider
+                min={3}
+                max={60}
+                step={1}
+                value={[sidesValue]}
+                onValueChange={([next]) => handleSidesChange(next ?? 3)}
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                min={3}
+                max={60}
+                value={sidesValue}
+                onChange={(event) => handleSidesChange(parseInt(event.target.value, 10) || 3)}
+                className="h-8 w-16 px-2 text-center"
+              />
+            </div>
+          </div>
+        )}
+
+        {starInnerRadius !== undefined && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <span>{t("editor.inner_radius")}</span>
+              <span>{innerRadiusValue}%</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Slider
+                min={0}
+                max={100}
+                step={1}
+                value={[innerRadiusValue]}
+                onValueChange={([next]) => handleInnerRadiusChange(next ?? 0)}
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                value={innerRadiusValue}
+                onChange={(event) => handleInnerRadiusChange(parseInt(event.target.value, 10) || 0)}
+                className="h-8 w-16 px-2 text-center"
+              />
+            </div>
+          </div>
+        )}
       </div>
-
-      {/* Sides Slider - Only show if sides prop is provided */}
-      {sides !== undefined && (
-        <div className="flex items-center gap-3 mb-4">
-          <span className="text-sm text-gray-500 whitespace-nowrap w-16">{t('editor.sides')}</span>
-          <input 
-            type="range" 
-            min="3" 
-            max="60" 
-            value={sidesValue} 
-            onChange={(e) => handleSidesChange(parseInt(e.target.value) || 3)}
-            className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-          />
-          <div className="w-12 flex items-center bg-gray-50 border border-gray-200 rounded-md px-1 h-8">
-             <input 
-               type="number" 
-               value={sidesValue}
-               onChange={(e) => handleSidesChange(parseInt(e.target.value) || 3)}
-               className="w-full bg-transparent outline-none text-sm text-center"
-               min="3"
-               max="60"
-             />
-          </div>
-        </div>
-      )}
-
-      {/* Inner Radius Slider */}
-      {starInnerRadius !== undefined && (
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500 whitespace-nowrap w-16">{t('editor.inner_radius')}</span>
-          <input 
-            type="range" 
-            min="0" 
-            max="100" 
-            value={innerRadiusValue} 
-            onChange={(e) => handleInnerRadiusChange(parseInt(e.target.value) || 0)}
-            className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
-          />
-          <div className="w-16 flex items-center bg-gray-50 border border-gray-200 rounded-md px-1 h-8">
-             <input 
-               type="number" 
-               value={innerRadiusValue}
-               onChange={(e) => handleInnerRadiusChange(parseInt(e.target.value) || 0)}
-               className="w-full bg-transparent outline-none text-sm text-center"
-               min="0"
-               max="100"
-             />
-             <span className="text-xs text-gray-400 mr-1">%</span>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

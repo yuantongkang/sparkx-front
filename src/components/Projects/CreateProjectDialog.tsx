@@ -1,8 +1,17 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { Image as ImageIcon, UploadCloud, Zap } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useI18n } from "@/i18n/client";
 
 const MAX_NAME_LENGTH = 50;
@@ -50,20 +59,6 @@ export default function CreateProjectDialog({
     setIsDragOver(false);
   };
 
-  useEffect(() => {
-    if (!isOpen) {
-      resetForm();
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isOpen]);
-
   const handleReadFile = async (file: File) => {
     if (!ACCEPTED_IMAGE_TYPES.has(file.type)) {
       setError(t("projects.create_dialog.cover_invalid"));
@@ -108,25 +103,43 @@ export default function CreateProjectDialog({
     onCancel();
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      handleClose();
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/30 px-4 py-8 backdrop-blur-[1px]">
-      <div className="mx-auto h-full w-full max-w-4xl overflow-y-auto rounded-[32px] border border-slate-200/80 bg-slate-50 shadow-[0_32px_80px_-44px_rgba(15,23,42,0.55)]">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent
+        className="max-h-[calc(100vh-4rem)] overflow-y-auto rounded-[32px] border border-slate-200/80 bg-slate-50 p-0 shadow-[0_32px_80px_-44px_rgba(15,23,42,0.55)] sm:max-w-4xl [&>button]:hidden"
+        onEscapeKeyDown={(event) => {
+          if (isSubmitting) {
+            event.preventDefault();
+          }
+        }}
+        onInteractOutside={(event) => {
+          if (isSubmitting) {
+            event.preventDefault();
+          }
+        }}
+      >
         <form
           className="space-y-8 px-5 py-8 sm:px-10 sm:py-10"
           onSubmit={(event) => {
             void handleSubmit(event);
           }}
         >
-          <div className="space-y-3 text-center">
-            <h2 className="text-4xl font-black tracking-tight text-[#0f2b58] sm:text-5xl">
+          <DialogHeader className="space-y-3 text-center">
+            <DialogTitle className="text-4xl font-black tracking-tight text-[#0f2b58] sm:text-5xl">
               {t("projects.create_dialog.title")}
-            </h2>
-            <p className="text-sm text-slate-500 sm:text-base">
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500 sm:text-base">
               {t("projects.create_dialog.subtitle")}
-            </p>
-          </div>
+            </DialogDescription>
+          </DialogHeader>
 
           <section className="space-y-3">
             <p className="text-sm font-semibold text-[#0f2b58]">
@@ -218,7 +231,7 @@ export default function CreateProjectDialog({
               <span className="ml-1 text-red-500">*</span>
             </p>
 
-            <input
+            <Input
               value={name}
               onChange={(event) => {
                 setName(event.currentTarget.value.slice(0, MAX_NAME_LENGTH));
@@ -227,7 +240,7 @@ export default function CreateProjectDialog({
                 }
               }}
               placeholder={t("projects.create_dialog.name_placeholder")}
-              className="w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-xl text-[#0f2b58] outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-300/40"
+              className="h-auto w-full rounded-2xl border border-slate-200 bg-white px-5 py-4 text-xl text-[#0f2b58] outline-none transition placeholder:text-slate-400 focus-visible:border-slate-300 focus-visible:ring-2 focus-visible:ring-slate-300/40"
             />
 
             <div className="text-sm text-slate-400">
@@ -236,31 +249,35 @@ export default function CreateProjectDialog({
           </section>
 
           {error && (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">
+            <p
+              className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600"
+              role="alert"
+            >
               {error}
             </p>
           )}
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleClose}
-              className="inline-flex h-14 items-center justify-center rounded-2xl border border-slate-200 bg-white text-lg font-semibold text-[#0f2b58] transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-14 rounded-2xl border-slate-200 bg-white text-lg font-semibold text-[#0f2b58] transition hover:bg-slate-100"
               disabled={isSubmitting}
             >
               {t("projects.create_dialog.cancel")}
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex h-14 items-center justify-center gap-2 rounded-2xl bg-[#0c1941] text-lg font-semibold text-white shadow-sm transition hover:bg-[#091637] disabled:cursor-not-allowed disabled:opacity-60"
+              className="h-14 gap-2 rounded-2xl bg-[#0c1941] text-lg font-semibold text-white shadow-sm transition hover:bg-[#091637]"
             >
               <span>{isSubmitting ? t("projects.create_dialog.creating") : t("projects.create_dialog.create")}</span>
               <Zap className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

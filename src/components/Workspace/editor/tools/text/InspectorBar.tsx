@@ -1,11 +1,17 @@
 "use client";
 
 import React, { useState, useRef } from 'react';
-import { AlignLeft, AlignCenter, AlignRight, Download, ChevronDown, SlidersHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Download, SlidersHorizontal, Pencil } from 'lucide-react';
 import { BaseElement } from '../../../types/BaseElement';
 import { StrokePanel } from '../shared/StrokePanel';
 import { TextAdvancedPanel } from './AdvancedPanel';
-import { useWorkspaceStore } from '@/store/useWorkspaceStore';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TextInspectorBarProps {
   element: BaseElement<any>;
@@ -21,12 +27,7 @@ const FONT_SIZES = [
   12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 64, 72, 96
 ];
 
-const FONT_WEIGHTS = [
-  'Normal', 'Bold', 'Italic', 'Bold Italic'
-];
-
 export default function TextInspectorBar({ element, onUpdate, onDownload }: TextInspectorBarProps) {
-  const { removeElement } = useWorkspaceStore();
   const [showStrokePanel, setShowStrokePanel] = useState(false);
   const [showAdvancedPanel, setShowAdvancedPanel] = useState(false);
   const strokeButtonRef = useRef<HTMLButtonElement>(null);
@@ -102,48 +103,59 @@ export default function TextInspectorBar({ element, onUpdate, onDownload }: Text
       </div>
 
       {/* Font Family */}
-      <div className="relative">
-        <select
+      <div className="w-32">
+        <Select
           value={fontFamily}
-          onChange={(e) => onUpdate({ fontFamily: e.target.value })}
-          className="appearance-none bg-transparent hover:bg-gray-50 pl-3 pr-8 py-1.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 cursor-pointer outline-none focus:border-blue-500 transition-colors w-32"
+          onValueChange={(value) => onUpdate({ fontFamily: value })}
         >
-          {FONT_FAMILIES.map(font => (
-            <option key={font} value={font}>{font}</option>
-          ))}
-        </select>
-        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <SelectTrigger className="h-9 border-gray-200 bg-transparent text-sm font-medium text-gray-700">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_FAMILIES.map((font) => (
+              <SelectItem key={font} value={font}>
+                {font}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Font Weight/Style */}
-      <div className="relative">
-        <select
+      <div className="w-28">
+        <Select
           value={fontStyle}
-          className="appearance-none bg-transparent hover:bg-gray-50 pl-3 pr-8 py-1.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 cursor-pointer outline-none focus:border-blue-500 transition-colors w-28"
-          onChange={(e) => {
-             onUpdate({ fontStyle: e.target.value }); 
-          }}
+          onValueChange={(value) => onUpdate({ fontStyle: value })}
         >
-          <option value="normal">Regular</option>
-          <option value="bold">Bold</option>
-          <option value="italic">Italic</option>
-          <option value="italic bold">Bold Italic</option>
-        </select>
-        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <SelectTrigger className="h-9 border-gray-200 bg-transparent text-sm font-medium text-gray-700">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="normal">Regular</SelectItem>
+            <SelectItem value="bold">Bold</SelectItem>
+            <SelectItem value="italic">Italic</SelectItem>
+            <SelectItem value="italic bold">Bold Italic</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Font Size */}
-      <div className="relative">
-        <select
-          value={fontSize}
-          onChange={(e) => onUpdate({ fontSize: parseInt(e.target.value) })}
-          className="appearance-none bg-transparent hover:bg-gray-50 pl-3 pr-8 py-1.5 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 cursor-pointer outline-none focus:border-blue-500 transition-colors w-20"
+      <div className="w-20">
+        <Select
+          value={String(fontSize)}
+          onValueChange={(value) => onUpdate({ fontSize: parseInt(value, 10) })}
         >
-          {FONT_SIZES.map(size => (
-            <option key={size} value={size}>{size}</option>
-          ))}
-        </select>
-        <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+          <SelectTrigger className="h-9 border-gray-200 bg-transparent text-sm font-medium text-gray-700">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {FONT_SIZES.map((size) => (
+              <SelectItem key={size} value={String(size)}>
+                {size}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Alignment */}

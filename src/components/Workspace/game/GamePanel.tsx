@@ -2,6 +2,13 @@
 
 import React, { useState } from 'react';
 import { Play, Square, Monitor } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function GamePanel() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,16 +39,17 @@ export default function GamePanel() {
 
           <div className="flex items-center gap-2">
               <Monitor size={16} className="text-gray-500" />
-              <select 
-                  value={resolution}
-                  onChange={(e) => setResolution(e.target.value)}
-                  className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-md focus:ring-blue-500 focus:border-blue-500 block p-1.5 outline-none"
-              >
-                  <option value="1920x1080">1920 x 1080 (FHD)</option>
-                  <option value="1280x720">1280 x 720 (HD)</option>
-                  <option value="800x600">800 x 600</option>
-                  <option value="mobile">Mobile (375x667)</option>
-              </select>
+              <Select value={resolution} onValueChange={setResolution}>
+                <SelectTrigger className="h-8 w-[180px] border-gray-200 bg-gray-50 text-gray-700">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1920x1080">1920 x 1080 (FHD)</SelectItem>
+                  <SelectItem value="1280x720">1280 x 720 (HD)</SelectItem>
+                  <SelectItem value="800x600">800 x 600</SelectItem>
+                  <SelectItem value="mobile">Mobile (375x667)</SelectItem>
+                </SelectContent>
+              </Select>
           </div>
         </div>
       </div>
