@@ -18,10 +18,8 @@ const parseProjectId = (raw: string): number | null => {
   return numeric;
 };
 
-const validateSession = async (request: NextRequest) => {
-  const session = getSparkxSessionFromHeaders(request.headers);
-  return !!session;
-};
+const getSession = (request: NextRequest) =>
+  getSparkxSessionFromHeaders(request.headers);
 
 export const runtime = "nodejs";
 
@@ -29,14 +27,19 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { projectId: string } },
 ) {
-  if (!(await validateSession(request))) return unauthorizedResponse();
+  const session = getSession(request);
+  if (!session) return unauthorizedResponse();
 
   const projectId = parseProjectId(params.projectId);
   if (!projectId) {
     return NextResponse.json({ message: "Invalid project id" }, { status: 400 });
   }
 
-  const result = await fetchSparkxJson<SparkxProject>(`/api/v1/projects/${projectId}`);
+  const result = await fetchSparkxJson<SparkxProject>(`/api/v1/projects/${projectId}`, {
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`,
+    },
+  });
   if (!result.ok) {
     return NextResponse.json(
       { message: result.message },
@@ -51,7 +54,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { projectId: string } },
 ) {
-  if (!(await validateSession(request))) return unauthorizedResponse();
+  const session = getSession(request);
+  if (!session) return unauthorizedResponse();
 
   const projectId = parseProjectId(params.projectId);
   if (!projectId) {
@@ -60,7 +64,12 @@ export async function DELETE(
 
   const result = await fetchSparkxJson<{ code: number; msg: string }>(
     `/api/v1/projects/${projectId}`,
-    { method: "DELETE" },
+    {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    },
   );
 
   if (!result.ok) {
@@ -77,7 +86,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { projectId: string } },
 ) {
-  if (!(await validateSession(request))) return unauthorizedResponse();
+  const session = getSession(request);
+  if (!session) return unauthorizedResponse();
 
   const projectId = parseProjectId(params.projectId);
   if (!projectId) {
@@ -103,6 +113,9 @@ export async function PUT(
     `/api/v1/projects/${projectId}`,
     {
       method: "PUT",
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
       body: JSON.stringify({
         name,
         description,

@@ -131,6 +131,7 @@ export async function POST(request: Request) {
     userId: result.data.userId,
     email: sessionEmail,
     username,
+    accessToken: result.data.token,
   });
 
   return response;

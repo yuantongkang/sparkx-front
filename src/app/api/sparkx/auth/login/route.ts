@@ -6,6 +6,7 @@ import { applySparkxSessionCookie } from "@/lib/sparkx-session";
 type SparkxLoginResponse = {
   userId: number;
   created: boolean;
+  token: string;
 };
 
 const parseBody = async (
@@ -91,6 +92,7 @@ export async function POST(request: NextRequest) {
     userId: result.data.userId,
     email: body.email,
     username,
+    accessToken: result.data.token,
   });
   return response;
 }

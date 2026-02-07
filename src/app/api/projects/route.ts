@@ -33,6 +33,11 @@ export async function GET(request: NextRequest) {
   const pageSize = parsePositiveInteger(url.searchParams.get("pageSize"), 20);
   const result = await fetchSparkxJson<SparkxPagedResponse<SparkxProject>>(
     `/api/v1/projects?page=${page}&pageSize=${pageSize}`,
+    {
+      headers: {
+        Authorization: `Bearer ${session.accessToken}`,
+      },
+    },
   );
 
   if (!result.ok) {
@@ -65,6 +70,9 @@ export async function POST(request: NextRequest) {
 
   const result = await fetchSparkxJson<SparkxProject>("/api/v1/projects", {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.accessToken}`,
+    },
     body: JSON.stringify({
       userId: ownerId,
       name,

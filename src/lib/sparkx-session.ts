@@ -5,6 +5,7 @@ export type SparkxSession = {
   userId: number;
   email: string;
   username?: string;
+  accessToken: string;
 };
 
 type HeaderCarrier = {
@@ -58,6 +59,7 @@ const encodeSessionToken = (session: SparkxSession): string => {
       userId: session.userId,
       email: session.email,
       username: session.username,
+      accessToken: session.accessToken,
       iat: Date.now(),
     }),
   );
@@ -84,9 +86,15 @@ const decodeSessionToken = (token: string): SparkxSession | null => {
       userId?: unknown;
       email?: unknown;
       username?: unknown;
+      accessToken?: unknown;
     };
 
-    if (!Number.isInteger(parsed.userId) || typeof parsed.email !== "string") {
+    if (
+      !Number.isInteger(parsed.userId) ||
+      typeof parsed.email !== "string" ||
+      typeof parsed.accessToken !== "string" ||
+      !parsed.accessToken.trim()
+    ) {
       return null;
     }
 
@@ -97,6 +105,7 @@ const decodeSessionToken = (token: string): SparkxSession | null => {
         typeof parsed.username === "string" && parsed.username.trim()
           ? parsed.username
           : undefined,
+      accessToken: parsed.accessToken.trim(),
     };
   } catch {
     return null;
