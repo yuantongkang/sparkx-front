@@ -21,6 +21,7 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV production
+ENV SPARKX_API_BASE_URL https://47.112.97.49:6001
 
 RUN addgroup --system --gid 1001 bunjs
 RUN adduser --system --uid 1001 nextjs
