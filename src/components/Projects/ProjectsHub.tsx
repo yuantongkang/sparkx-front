@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { BookOpenText, Plus, Rocket, Trash2 } from "lucide-react";
+import { BookOpenText, Edit, Plus, Rocket, Trash2 } from "lucide-react";
 
 import CreateProjectDialog from "@/components/Projects/CreateProjectDialog";
+import EditProjectDialog from "@/components/Projects/EditProjectDialog";
 import { useI18n } from "@/i18n/client";
 import { type Project } from "@/lib/projects";
 import {
   createProject,
   deleteProjectById,
   listProjects,
+  updateProjectById,
 } from "@/lib/projects-api";
 
 const pickFallbackCover = (index: number) => {
@@ -32,6 +34,9 @@ export default function ProjectsHub() {
   const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isUpdatingProject, setIsUpdatingProject] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,6 +123,41 @@ export default function ProjectsHub() {
     await handleCreateProject();
   };
 
+  const handleEditProject = (project: Project) => {
+    setEditingProject(project);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleUpdateProject = async (updates: { name: string; description: string }) => {
+    if (!editingProject) return;
+
+    setError(null);
+    setIsUpdatingProject(true);
+    try {
+      await updateProjectById(editingProject.id, updates);
+      setProjects((prev) =>
+        prev.map((p) =>
+          p.id === editingProject.id
+            ? { ...p, name: updates.name, description: updates.description }
+            : p
+        )
+      );
+      setIsEditDialogOpen(false);
+      setEditingProject(null);
+    } catch (updateError) {
+      setError(
+        updateError instanceof Error ? updateError.message : t("projects.empty")
+      );
+    } finally {
+      setIsUpdatingProject(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditDialogOpen(false);
+    setEditingProject(null);
+  };
+
   return (
     <div className="mx-auto w-full max-w-6xl px-6 pb-16 pt-10">
       <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
@@ -185,7 +225,7 @@ export default function ProjectsHub() {
 
               <div className="space-y-3 p-6">
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h2 className="truncate text-base font-semibold text-slate-900">
                       {project.name}
                     </h2>
@@ -194,16 +234,26 @@ export default function ProjectsHub() {
                     </p>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      void handleDeleteProject(project.id);
-                    }}
-                    className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                    aria-label={t("projects.delete")}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleEditProject(project)}
+                      className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                      aria-label={t("projects.edit")}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleDeleteProject(project.id);
+                      }}
+                      className="rounded-full p-2 text-slate-400 transition hover:bg-slate-100 hover:text-red-600"
+                      aria-label={t("projects.delete")}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-3">
@@ -248,6 +298,16 @@ export default function ProjectsHub() {
         }}
         onSubmit={(input) => handleCreateProject(input)}
       />
+
+      {editingProject && (
+        <EditProjectDialog
+          project={editingProject}
+          isOpen={isEditDialogOpen}
+          isSubmitting={isUpdatingProject}
+          onCancel={handleCancelEdit}
+          onSubmit={handleUpdateProject}
+        />
+      )}
     </div>
   );
 }

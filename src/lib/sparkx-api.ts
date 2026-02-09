@@ -23,6 +23,14 @@ type SparkxApiFailure = {
   ok: false;
   status: number;
   message: string;
+  debug?: {
+    baseUrl: string;
+    path: string;
+    method: string;
+    timestamp: string;
+    errorName?: string;
+    errorCause?: string;
+  };
 };
 
 type SparkxApiSuccess<T> = {
@@ -44,6 +52,8 @@ const normalizeBaseURL = (raw?: string): string => {
 };
 
 const SPARKX_API_BASE_URL = normalizeBaseURL(process.env.SPARKX_API_BASE_URL);
+
+export const getSparkxApiBaseUrl = (): string => SPARKX_API_BASE_URL;
 
 const parseJsonSafely = async (response: Response): Promise<unknown> => {
   const text = await response.text();
@@ -77,6 +87,8 @@ export const fetchSparkxJson = async <T>(
   path: string,
   init?: RequestInit,
 ): Promise<SparkxApiResult<T>> => {
+  const method = (init?.method ?? "GET").toUpperCase();
+  const timestamp = new Date().toISOString();
   try {
     const response = await fetch(`${SPARKX_API_BASE_URL}${path}`, {
       ...init,
@@ -93,6 +105,12 @@ export const fetchSparkxJson = async <T>(
         ok: false,
         status: response.status,
         message: extractErrorMessage(payload),
+        debug: {
+          baseUrl: SPARKX_API_BASE_URL,
+          path,
+          method,
+          timestamp,
+        },
       };
     }
 
@@ -102,10 +120,21 @@ export const fetchSparkxJson = async <T>(
       data: payload as T,
     };
   } catch (error) {
+    const errorName = error instanceof Error ? error.name : undefined;
+    const errorCause =
+      error instanceof Error ? String((error as Error & { cause?: unknown }).cause ?? "") : "";
     return {
       ok: false,
       status: 502,
       message: error instanceof Error ? error.message : "Upstream request failed",
+      debug: {
+        baseUrl: SPARKX_API_BASE_URL,
+        path,
+        method,
+        timestamp,
+        errorName,
+        errorCause: errorCause || undefined,
+      },
     };
   }
 };

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { fetchSparkxJson } from "@/lib/sparkx-api";
+import { fetchSparkxJson, getSparkxApiBaseUrl } from "@/lib/sparkx-api";
 import { applySparkxSessionCookie } from "@/lib/sparkx-session";
 
 type SparkxGoogleLoginResponse = {
@@ -63,8 +63,20 @@ export async function POST(request: Request) {
   );
 
   if (!result.ok) {
+    console.error("[sparkx-auth-login-google] upstream request failed", {
+      status: result.status,
+      message: result.message,
+      debug: result.debug,
+    });
     return NextResponse.json(
-      { message: result.message },
+      {
+        message: result.message,
+        config: {
+          sparkxApiBaseUrl: getSparkxApiBaseUrl(),
+          endpoint: "/api/v1/auth/login",
+        },
+        debug: result.debug,
+      },
       { status: result.status },
     );
   }

@@ -240,12 +240,71 @@ const parseApiErrorMessage = async (response: Response): Promise<string> => {
   const text = await response.text();
   if (!text) return "Request failed";
   try {
-    const parsed = JSON.parse(text) as { message?: unknown; msg?: unknown };
+    const parsed = JSON.parse(text) as {
+      message?: unknown;
+      msg?: unknown;
+      config?: {
+        sparkxApiBaseUrl?: unknown;
+        endpoint?: unknown;
+      };
+      debug?: {
+        method?: unknown;
+        path?: unknown;
+        status?: unknown;
+        timestamp?: unknown;
+        errorName?: unknown;
+        errorCause?: unknown;
+      };
+    };
+    const lines: string[] = [];
+
     if (typeof parsed.message === "string" && parsed.message.trim()) {
-      return parsed.message;
+      lines.push(parsed.message.trim());
+    } else if (typeof parsed.msg === "string" && parsed.msg.trim()) {
+      lines.push(parsed.msg.trim());
     }
-    if (typeof parsed.msg === "string" && parsed.msg.trim()) {
-      return parsed.msg;
+
+    if (parsed.config && typeof parsed.config === "object") {
+      const baseUrl =
+        typeof parsed.config.sparkxApiBaseUrl === "string"
+          ? parsed.config.sparkxApiBaseUrl
+          : "";
+      const endpoint =
+        typeof parsed.config.endpoint === "string" ? parsed.config.endpoint : "";
+      if (baseUrl) {
+        lines.push(`config.baseUrl=${baseUrl}`);
+      }
+      if (endpoint) {
+        lines.push(`config.endpoint=${endpoint}`);
+      }
+    }
+
+    if (parsed.debug && typeof parsed.debug === "object") {
+      const method = typeof parsed.debug.method === "string" ? parsed.debug.method : "";
+      const path = typeof parsed.debug.path === "string" ? parsed.debug.path : "";
+      const timestamp =
+        typeof parsed.debug.timestamp === "string" ? parsed.debug.timestamp : "";
+      const errorName =
+        typeof parsed.debug.errorName === "string" ? parsed.debug.errorName : "";
+      const errorCause =
+        typeof parsed.debug.errorCause === "string" ? parsed.debug.errorCause : "";
+
+      if (method || path) {
+        lines.push(`debug.request=${method || "UNKNOWN"} ${path || "-"}`);
+      }
+      if (timestamp) {
+        lines.push(`debug.time=${timestamp}`);
+      }
+      if (errorName) {
+        lines.push(`debug.errorName=${errorName}`);
+      }
+      if (errorCause) {
+        lines.push(`debug.errorCause=${errorCause}`);
+      }
+    }
+
+    if (lines.length > 0) {
+      return lines.join("\n");
     }
   } catch {
     // ignore parse failure and return plain text
