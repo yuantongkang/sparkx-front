@@ -123,6 +123,68 @@ bun run test
 - **样式**: [Tailwind CSS](https://tailwindcss.com/)
 - **画布库**: [Konva](https://konvajs.org/) / [React Konva](https://konvajs.org/docs/react/index.html)
 - **图标**: [Lucide React](https://lucide.dev/)
+- **状态管理**: [Zustand](https://zustand-demo.pmnd.rs/) + [zundo](https://github.com/charkour/zundo) (撤销/重做)
+
+## 项目依赖
+
+### 生产依赖
+
+| 包名 | 版本 | 说明 |
+|------|------|------|
+| `next` | 14.2.5 | Next.js 框架 |
+| `react` / `react-dom` | ^18 | React 核心库 |
+| `typescript` | ^5 | TypeScript 语言支持 |
+| `konva` | ^9.3.22 | 2D Canvas 库 |
+| `react-konva` | ^18.2.10 | Konva 的 React 组件封装 |
+| `zustand` | ^5.0.9 | 轻量级状态管理 |
+| `zundo` | ^2.3.0 | Zustand 的撤销/重做中间件 |
+| `tailwindcss` | ^3.4.7 | 原子化 CSS 框架 |
+| `tailwind-merge` | ^3.4.0 | Tailwind 类名合并工具 |
+| `tailwindcss-animate` | ^1.0.7 | Tailwind 动画工具 |
+| `lucide-react` | ^0.563.0 | 图标库 |
+| `clsx` | ^2.1.1 | 条件类名工具 |
+| `class-variance-authority` | ^0.7.1 | 类名变体管理 |
+
+#### UI 组件库 (Radix UI)
+
+| 包名 | 版本 | 说明 |
+|------|------|------|
+| `@radix-ui/react-checkbox` | ^1.3.3 | 复选框组件 |
+| `@radix-ui/react-dialog` | ^1.1.15 | 对话框组件 |
+| `@radix-ui/react-dropdown-menu` | ^2.1.16 | 下拉菜单组件 |
+| `@radix-ui/react-label` | ^2.1.8 | 标签组件 |
+| `@radix-ui/react-select` | ^2.2.6 | 选择器组件 |
+| `@radix-ui/react-slider` | ^1.3.6 | 滑块组件 |
+| `@radix-ui/react-slot` | ^1.2.4 | 插槽组件 |
+| `@radix-ui/react-tabs` | ^1.1.13 | 标签页组件 |
+
+#### 工具库
+
+| 包名 | 版本 | 说明 |
+|------|------|------|
+| `react-konva-utils` | ^2.0.0 | React Konva 工具函数 |
+| `use-image` | ^1.1.4 | 图片加载 Hook |
+| `@react-oauth/google` | ^0.13.3 | Google OAuth 登录 |
+
+### 开发依赖
+
+| 包名 | 版本 | 说明 |
+|------|------|------|
+| `@types/node` | ^20 | Node.js 类型定义 |
+| `@types/react` | ^18 | React 类型定义 |
+| `@types/react-dom` | ^18 | React DOM 类型定义 |
+| `@types/jsdom` | ^27.0.0 | JSDOM 类型定义 |
+| `@testing-library/react` | ^16.3.2 | React 测试工具 |
+| `@testing-library/user-event` | ^14.6.1 | 用户事件模拟 |
+| `jsdom` | ^28.0.0 | DOM 环境模拟（测试用） |
+| `eslint` | ^8 | 代码检查工具 |
+| `eslint-config-next` | 14.2.5 | Next.js ESLint 配置 |
+| `autoprefixer` | ^10.4.20 | CSS 自动前缀 |
+| `postcss` | ^8.4.40 | CSS 转换工具 |
+
+### 包管理器
+
+项目使用 **Bun** 作为包管理器 (当前版本: 1.3.6)
 
 ## 目录结构
 
